@@ -7,62 +7,54 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 
   <style>
     /* --- Globale Resets & Scrollbar-Fixes --- */
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
     html, body, #root { 
       height: 100vh; 
       width: 100vw;
-      overflow: hidden;
+      overflow: hidden; /* Verhindert globales Scrollen! */
       font-family: 'Lato', sans-serif; 
       background: #f4f4f4; 
       color: #000000;
     }
 
-    /* Dezente Scrollbars für die Spalten */
+    /* Dezente Scrollbars für die einzelnen Spalten */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f4f4f4; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
-    /* --- App Layout Strukturen --- */
+    /* --- Core Layout (Flexbox) --- */
     .app-container {
       display: flex;
       flex-direction: column;
       height: 100vh;
+      width: 100vw;
     }
 
     .main-layout {
       display: flex;
-      flex: 1;
-      height: calc(100vh - 70px); /* Rest-Höhe nach Header */
+      flex: 1; /* Nimmt den kompletten restlichen Platz unter dem Header ein */
       overflow: hidden;
     }
 
-    /* Drei voneinander isolierte Scroll-Spalten */
-    .sidebar, .feed-container, .right-panel {
-      height: 100%;
-      background: #ffffff;
-    }
-
+    /* Unabhängig scrollbare Spalten */
     .sidebar { 
       width: 220px; 
       border-right: 1px solid #d9d9d9; 
+      background: #ffffff;
       flex-shrink: 0; 
       overflow-y: auto;
     }
     
     .feed-container { 
-      flex: 1; 
+      flex: 1; /* Nimmt die Mitte ein */
       background: #f4f4f4; 
       display: flex; 
       flex-direction: column; 
@@ -72,16 +64,17 @@
     .right-panel { 
       width: 220px; 
       border-left: 1px solid #d9d9d9; 
+      background: #ffffff;
       padding: 20px 15px; 
       flex-shrink: 0; 
       overflow-y: auto;
     }
 
-    /* --- UI Komponenten & Utilities --- */
+    /* --- UI Komponenten --- */
     .header {
       background: #ffffff;
       border-bottom: 1px solid #d9d9d9;
-      flex-shrink: 0;
+      flex-shrink: 0; /* Header darf nicht mitschrumpfen */
     }
     .header-bar {
       display: flex;
@@ -99,18 +92,405 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
-      flex-shrink: 0;
+      flex-shrink: 0; /* Filterbar bleibt immer oben am Feed kleben */
     }
 
     .feed-scroll-area {
-      flex: 1;
+      flex: 1; /* Eigener Scrollbereich nur für die Kacheln */
       overflow-y: auto;
       padding: 20px;
       -webkit-overflow-scrolling: touch;
     }
 
     /* Form-Elemente */
-    select, input, button {
-      font-family: 'Lato', sans-serif;
-      outline: none;
+    select, input, button { font-family: 'Lato', sans-serif; outline: none; }
+    
+    .input-field {
+      background: #f4f4f4; border: 1px solid #d9d9d9; padding: 6px 12px; font-size: 13px; width: 160px;
     }
+    .select-dropdown {
+      background: #ffffff; border: 1px solid #d9d9d9; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #34384f; cursor: pointer;
+    }
+
+    /* Cards */
+    .card {
+      background: #ffffff; border: 1px solid #d9d9d9; padding: 16px 20px; margin-bottom: 10px; transition: all 0.15s ease-in-out;
+    }
+    .card:hover { border-color: #b3e2f5; box-shadow: 0 4px 12px rgba(0, 159, 223, 0.08); }
+
+    .brand-row {
+      display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.1s ease;
+    }
+    .brand-row:hover { background: #f4f4f4; }
+    .brand-row.active { background: #e6f6fc; border-left-color: #009fdf; }
+
+    /* Badges & Buttons */
+    .badge { padding: 2px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-primary { background: #34384f; color: #ffffff; border: none; padding: 9px 16px; font-size: 12px; font-weight: 900; cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; }
+    .btn-secondary { background: transparent; border: 1px solid #d9d9d9; color: #70706f; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .btn-danger { background: transparent; border: 1px solid rgba(230, 59, 17, 0.3); color: #e63b11; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+    .btn-close { margin-left: auto; background: none; border: none; color: #70706f; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    .btn-close:hover { color: #e63b11; }
+
+    /* Progress Bar */
+    .progress-track { background: #f4f4f4; height: 4px; width: 100%; margin-top: 5px; }
+    .progress-fill { height: 100%; transition: width 0.5s ease-out; }
+  </style>
+</head>
+<body>
+
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useCallback, useRef, useMemo } = React;
+
+    // --- Konfigurationen & Farbpalette ---
+    const C = {
+      cyan: "#009fdf", cyanLight: "#e6f6fc", cyanMid: "#b3e2f5",
+      white: "#ffffff", grey: "#70706f", greyLight: "#f4f4f4", greyMid: "#d9d9d9",
+      black: "#000000", orange: "#e63b11", aqua: "#41b6a5", yellow: "#ffc72c",
+      darkBlue: "#34384f", teal: "#20778e",
+    };
+
+    const SENTIMENT_COLORS = { "Positiv": C.aqua, "Neutral": C.yellow, "Negativ": C.orange };
+    const BMI_BRANDS = ["Braas", "Vedag", "Icopal", "Wolfin"];
+    const PLATFORMS = ["Instagram", "TikTok", "Google", "Twitter/X", "YouTube", "Fachforen", "News"];
+    const SENTIMENTS = ["Positiv", "Neutral", "Negativ"];
+    
+    const PLATFORM_BG = {
+      "Instagram": "#e1306c", "TikTok": "#010101", "Google": C.darkBlue,
+      "Twitter/X": "#1a1a2e", "YouTube": "#cc0000", "Fachforen": C.teal, "News": C.grey,
+    };
+    const PLATFORM_PENDING = ["Instagram"];
+
+    const PERIOD_OPTIONS = [
+      { label: "Alle", days: 0 },
+      { label: "Letzte Woche", days: 7 },
+      { label: "Letzter Monat", days: 30 },
+      { label: "Letzte 3 Monate", days: 90 },
+      { label: "Letztes Jahr", days: 365 },
+    ];
+
+    // --- Statische Seed-Daten ---
+    const SEED_DATA = [
+      { id:"bau-braas-1", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"Habe mein Dach mit Braas Turmalin eindecken lassen. Leider überzeugt das Ergebnis nicht: Die Ziegel wirken flügelig, Fugen haben unterschiedliche Maße.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2026-02-14", topic:"Turmalin", stars: null },
+      { id:"bau-braas-2", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"BMI Braas sagt, die Pfannen seien in Ordnung. Messwerte teilte der Hersteller nicht mit – nur eine pauschale Aussage. Erwartungen enttäuscht.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2026-02-15", topic:"Service", stars: null },
+      { id:"glass-bmi-3", brand:"Braas", platform:"News", author:"Mitarbeiter", content:"Wenn du engagiert bist, kannst du dich austoben. Durch flache Hierarchien ist es leicht, eigene Projekte voranzutreiben.", sentiment:"Positiv", url:"https://www.glassdoor.de", date:"2026-03-01", topic:"Karriere", stars: 4 },
+      { id:"li-wolfin-1", brand:"Wolfin", platform:"News", author:"Dachdecker", content:"Ich habe in meiner aktiven Zeit als Dachdecker alle Produkte dieser Marken gerne verarbeitet. Von Profis für Profis!", sentiment:"Positiv", url:"https://de.linkedin.com", date:"2025-11-04", topic:"Verarbeitung", stars: 5 },
+      { id:"braas-2", brand:"Braas", platform:"Fachforen", author:"Hausbauer2026", content:"Risse in meinen Braas Turmalin-Ziegel immer an gleicher Stelle – Qualitätsproblem beim Neubau!", sentiment:"Negativ", url:"https://www.bauexpertenforum.de", date:"2026-04-10", topic:"Qualität", stars: 1 },
+      { id:"vedag-1", brand:"Vedag", platform:"News", author:"dach+holzbau", content:"Vedag Turbodach-System beschleunigt Verlegung deutlich – praxiserprobt, haltbar und wärmestandfest.", sentiment:"Positiv", url:"https://www.dach-holzbau.de", date:"2026-04-11", topic:"Turbodach", stars: null },
+      { id:"icopal-2", brand:"Icopal", platform:"Fachforen", author:"Planer_Bayern", content:"Icopal Universal Pro vereint Bitumen- und Kunststoffvorteile – einlagig, sehr wirtschaftlich für große Flächen.", sentiment:"Positiv", url:"https://www.bmigroup.com", date:"2026-04-15", topic:"Universal Pro", stars: 5 }
+    ];
+
+    // --- Helper für LocalStorage & sicheres Datum (verhindert Abstürze!) ---
+    const storage = {
+      get: key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+      set: (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+    };
+
+    const formatDateSafe = (dateString) => {
+      if (!dateString) return "Noch nie";
+      const d = new Date(dateString);
+      return isNaN(d.getTime()) ? "Noch nie" : d.toLocaleDateString("de-DE");
+    };
+
+    // --- UI-Komponenten ---
+    function BmiLogo({ size = 38 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }}>
+          <rect width="100" height="100" fill={C.cyan} />
+          <text x="50" y="71" textAnchor="middle" fontFamily="Lato,sans-serif" fontWeight="900" fontSize="50" fill="white" letterSpacing="-1">BMI</text>
+        </svg>
+      );
+    }
+
+    function HorizonLine() {
+      return (
+        <svg viewBox="0 0 800 10" preserveAspectRatio="none" style={{ display: "block", width: "100%", height: 6, flexShrink: 0 }}>
+          <polygon points="0,10 680,10 800,0 800,3 680,13 0,13" fill={C.cyan} />
+        </svg>
+      );
+    }
+
+    function Stars({ n }) {
+      if (!n) return null;
+      const rounded = Math.round(n);
+      return (
+        <span style={{ color: C.yellow, fontSize: 13, letterSpacing: 1 }}>
+          {"★".repeat(rounded) + "☆".repeat(5 - rounded)}
+        </span>
+      );
+    }
+
+    function ResultCard({ item, onDelete }) {
+      const sentimentColor = SENTIMENT_COLORS[item.sentiment] || C.grey;
+      return (
+        <div className="card" style={{ borderLeft: `4px solid ${sentimentColor}` }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
+            
+            <span className="badge" style={{ background: PLATFORM_BG[item.platform] || C.grey, color: "#fff" }}>
+              {item.platform} {PLATFORM_PENDING.includes(item.platform) && "⏳"}
+            </span>
+            
+            <span className="badge" style={{ border: `1.5px solid ${sentimentColor}`, color: sentimentColor, background: `${sentimentColor}12` }}>
+              {item.sentiment}
+            </span>
+            
+            <span style={{ fontSize: 10, fontWeight: 800, color: C.cyan, borderBottom: `2px solid ${C.cyan}` }}>{item.brand}</span>
+            {item.topic && <span style={{ fontSize: 11, color: C.grey, fontStyle: "italic" }}>#{item.topic}</span>}
+            
+            <Stars n={item.stars} />
+            <button onClick={() => onDelete(item.id)} className="btn-close">✕</button>
+          </div>
+          
+          <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 10, color: C.black }}>{item.content}</div>
+          
+          <div style={{ display: "flex", gap: 14, fontSize: 11, color: C.grey }}>
+            {item.author && <span style={{ fontWeight: 700 }}>@{item.author}</span>}
+            <span>{formatDateSafe(item.date)}</span>
+            {item.url && item.url !== "https://..." && (
+              <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, textDecoration: "none", fontWeight: 700 }}>Link →</a>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function ImportPanel({ onImport, onClose }) {
+      const [text, setText] = useState("");
+      const [error, setError] = useState("");
+      const fileRef = useRef();
+
+      const handleFile = e => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => setText(ev.target.result);
+        reader.readAsText(file);
+      };
+
+      const handleImport = () => {
+        try {
+          const arr = JSON.parse(text.trim());
+          if (!Array.isArray(arr) || !arr.length) { setError("Kein gültiges JSON-Array."); return; }
+          onImport(arr); onClose();
+        } catch { setError("Ungültiges JSON-Format."); }
+      };
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 400, padding: 20 }}>
+          <div style={{ background: C.white, width: 500, maxWidth: "100%", display: "flex", flexDirection: "column", borderTop: `4px solid ${C.cyan}` }}>
+            <div style={{ padding: "15px 20px", borderBottom: `1px solid ${C.greyMid}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontWeight: 900, fontSize: 15, color: C.darkBlue }}>Ergebnisse importieren</div>
+              <button onClick={onClose} className="btn-close" style={{ fontSize: 20 }}>✕</button>
+            </div>
+            <div style={{ padding: 20 }}>
+              <p style={{ fontSize: 13, color: C.grey, marginBottom: 12 }}>Füge JSON-Ergebnisse aus deinem KI-Scan ein.</p>
+              <button onClick={() => fileRef.current.click()} className="btn-secondary" style={{ marginBottom: 12 }}>📁 Datei wählen</button>
+              <input type="file" accept=".json" ref={fileRef} onChange={handleFile} style={{ display: "none" }} />
+              <textarea value={text} onChange={e => { setText(e.target.value); setError(""); }} placeholder='[{"brand":"Braas","platform":"Fachforen",...}]' style={{ width: "100%", height: 180, padding: 10, border: `1px solid ${C.greyMid}`, fontSize: 11, fontFamily: "monospace", resize: "none" }} />
+              {error && <p style={{ color: C.orange, fontSize: 12, marginTop: 8 }}>{error}</p>}
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.greyMid}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={onClose} className="btn-secondary">Abbrechen</button>
+              <button onClick={handleImport} className="btn-primary" disabled={!text.trim()} style={{ background: text.trim() ? C.darkBlue : C.greyMid }}>Importieren</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- Hauptanwendung ---
+    function App() {
+      const [results, setResults] = useState(() => storage.get("bmi-results") || SEED_DATA);
+      const [meta, setMeta] = useState(() => storage.get("bmi-meta") || { lastRun: null });
+      const [filterBrand, setFilterBrand] = useState("Alle");
+      const [filterSentiment, setFilterSentiment] = useState("Alle");
+      const [filterPlatform, setFilterPlatform] = useState("Alle");
+      const [search, setSearch] = useState("");
+      const [scanDays, setScanDays] = useState(() => storage.get("bmi-scan-days") || 0);
+      const [showImport, setShowImport] = useState(false);
+
+      const filteredResults = useMemo(() => {
+        const cutoff = scanDays > 0 ? new Date(Date.now() - scanDays * 86400000) : null;
+        return results.filter(r => {
+          if (filterBrand !== "Alle" && r.brand !== filterBrand) return false;
+          if (filterSentiment !== "Alle" && r.sentiment !== filterSentiment) return false;
+          if (filterPlatform !== "Alle" && r.platform !== filterPlatform) return false;
+          if (cutoff && r.date && new Date(r.date) < cutoff) return false;
+          if (search && !r.content?.toLowerCase().includes(search.toLowerCase()) && !r.brand?.toLowerCase().includes(search.toLowerCase())) return false;
+          return true;
+        });
+      }, [results, filterBrand, filterSentiment, filterPlatform, scanDays, search]);
+
+      const counts = useMemo(() => {
+        return {
+          total: filteredResults.length,
+          pos: filteredResults.filter(r => r.sentiment === "Positiv").length,
+          neu: filteredResults.filter(r => r.sentiment === "Neutral").length,
+          neg: filteredResults.filter(r => r.sentiment === "Negativ").length,
+        };
+      }, [filteredResults]);
+
+      const handleImport = useCallback(arr => {
+        const withIds = arr.map((item, i) => ({ ...item, id: item.id || `imp-${Date.now()}-${i}` }));
+        const merged = [...withIds, ...results].filter((r, i, a) => a.findIndex(x => x.id === r.id) === i);
+        setResults(merged); storage.set("bmi-results", merged);
+        const m = { lastRun: new Date().toISOString() }; setMeta(m); storage.set("bmi-meta", m);
+      }, [results]);
+
+      const handleDelete = useCallback(id => {
+        const updated = results.filter(r => r.id !== id);
+        setResults(updated); storage.set("bmi-results", updated);
+      }, [results]);
+
+      const handleClear = () => {
+        if (window.confirm("Alle Daten leeren?")) { setResults([]); storage.set("bmi-results", []); }
+      };
+
+      const exportJSON = () => {
+        const blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = `bmi-listeningdata.json`; a.click();
+      };
+
+      return (
+        <div className="app-container">
+          {showImport && <ImportPanel onImport={handleImport} onClose={() => setShowImport(false)} />}
+
+          {/* --- Header --- */}
+          <div className="header">
+            <div style={{ background: C.cyan, height: 4 }} />
+            <div className="header-bar">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <BmiLogo />
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: 16, color: C.darkBlue, lineHeight: 1.1 }}>Social Listening</div>
+                  <div style={{ fontSize: 10, color: C.grey, fontWeight: 700, letterSpacing: 1 }}>BRAND MONITORING COCKPIT</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <div style={{ textAlign: "right", marginRight: 5 }}>
+                  <div style={{ fontSize: 9, color: C.grey, letterSpacing: 0.5, textTransform: "uppercase" }}>Letzter Scan</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue }}>{formatDateSafe(meta.lastRun)}</div>
+                </div>
+                <button onClick={exportJSON} className="btn-secondary">↓ Export</button>
+                <button onClick={() => setShowImport(true)} className="btn-primary">↑ Import</button>
+              </div>
+            </div>
+            <HorizonLine />
+          </div>
+
+          {/* --- Main Dashboard --- */}
+          <div className="main-layout">
+            
+            {/* 1. Sidebar */}
+            <div className="sidebar">
+              <div style={{ padding: "20px 15px", borderBottom: `1px solid #d9d9d9` }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.grey, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Mentions Gesamt</div>
+                <div style={{ fontSize: 42, fontWeight: 900, color: C.cyan, lineHeight: 1 }}>{counts.total}</div>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4, marginTop: 12 }}>
+                  {[["Pos", counts.pos, C.aqua], ["Neu", counts.neu, C.yellow], ["Neg", counts.neg, C.orange]].map(([l, v, c]) => (
+                    <div key={l} style={{ textAlign: "center", padding: "6px 2px", borderTop: `3px solid ${c}`, background: `${c}10` }}>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: c }}>{v}</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: C.grey }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 12 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.grey, letterSpacing: 1, textTransform: "uppercase", padding: "0 15px 6px" }}>Marken Filter</div>
+                {BMI_BRANDS.map(b => {
+                  const cnt = results.filter(r => r.brand === b).length;
+                  return (
+                    <div key={b} className={`brand-row ${filterBrand === b ? "active" : ""}`} onClick={() => setFilterBrand(filterBrand === b ? "Alle" : b)}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: filterBrand === b ? C.cyan : C.darkBlue }}>{b}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, background: C.greyLight, padding: "1px 6px", color: C.grey }}>{cnt}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Feed & Filter */}
+            <div className="feed-container">
+              <div className="filter-bar">
+                <input className="input-field" placeholder="Suchen..." value={search} onChange={e => setSearch(e.target.value)} />
+                
+                <select className="select-dropdown" value={filterSentiment} onChange={e => setFilterSentiment(e.target.value)}>
+                  <option value="Alle">Alle Sentiments</option>
+                  {SENTIMENTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+
+                <select className="select-dropdown" value={filterPlatform} onChange={e => setFilterPlatform(e.target.value)}>
+                  <option value="Alle">Alle Plattformen</option>
+                  {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+
+                <select className="select-dropdown" value={scanDays} onChange={e => {
+                  setScanDays(Number(e.target.value));
+                  storage.set("bmi-scan-days", Number(e.target.value));
+                }}>
+                  {PERIOD_OPTIONS.map(o => <option key={o.days} value={o.days}>{o.label}</option>)}
+                </select>
+
+                {results.length > 0 && <button onClick={handleClear} className="btn-danger" style={{ marginLeft: "auto" }}>Leeren</button>}
+              </div>
+
+              <div className="feed-scroll-area">
+                {filteredResults.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "50px 0", color: C.grey }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 5 }}>Keine Daten gefunden</div>
+                    <p style={{ fontSize: 13 }}>Passe die Filter an oder importiere ein neues Scan-JSON.</p>
+                  </div>
+                ) : (
+                  filteredResults.map(item => <ResultCard key={item.id} item={item} onDelete={handleDelete} />)
+                )}
+              </div>
+            </div>
+
+            {/* 3. Analyse Rechts */}
+            <div className="right-panel">
+              <div style={{ fontSize: 9, fontWeight: 700, color: C.grey, letterSpacing: 1, textTransform: "uppercase", marginBottom: 15 }}>Sentiment Verteilung</div>
+              {SENTIMENTS.map(s => {
+                const cnt = filteredResults.filter(r => r.sentiment === s).length;
+                const pct = counts.total ? Math.round((cnt / counts.total) * 100) : 0;
+                return (
+                  <div key={s} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ color: C.darkBlue }}>{s}</span>
+                      <span style={{ color: SENTIMENT_COLORS[s] }}>{pct}%</span>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill" style={{ width: `${pct}%`, background: SENTIMENT_COLORS[s] }} />
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div style={{ marginTop: 25, borderTop: `1px solid #d9d9d9`, paddingTop: 15 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.grey, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Quellen Kanäle</div>
+                {PLATFORMS.map(p => {
+                  const cnt = filteredResults.filter(r => r.platform === p).length;
+                  const pending = PLATFORM_PENDING.includes(p);
+                  return (
+                    <div key={p} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", opacity: pending ? 0.4 : 1 }}>
+                      <span style={{ color: C.grey }}>{p} {pending && "⏳"}</span>
+                      <span style={{ fontWeight: 700, color: C.darkBlue }}>{pending ? "—" : cnt}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
