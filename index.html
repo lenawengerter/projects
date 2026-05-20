@@ -28,7 +28,7 @@
       color: #000000;
     }
 
-    /* Schicke, dezente Scrollbars */
+    /* Dezente Scrollbars für die Spalten */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f4f4f4; }
     ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
@@ -44,11 +44,11 @@
     .main-layout {
       display: flex;
       flex: 1;
-      height: calc(100vh - 70px); /* Exakte Rest-Höhe nach Header */
+      height: calc(100vh - 70px); /* Rest-Höhe nach Header */
       overflow: hidden;
     }
 
-    /* Jede Spalte erhält ihr eigenes, sauberes Scroll-Verhalten */
+    /* Drei voneinander isolierte Scroll-Spalten */
     .sidebar, .feed-container, .right-panel {
       height: 100%;
       background: #ffffff;
@@ -114,15 +114,3 @@
       font-family: 'Lato', sans-serif;
       outline: none;
     }
-    
-    .input-field {
-      background: #f4f4f4;
-      border: 1px solid #d9d9d9;
-      padding: 6px 12px;
-      font-size: 13px;
-      width: 160px;
-    }
-
-    .select-dropdown {
-      background: #ffffff;
-      border: 1px solid #d9d9d9
