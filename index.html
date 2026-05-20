@@ -3,428 +3,230 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BMI Social Listening</title>
+  <title>BMI Social Listening Dashboard</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Lato', sans-serif; background: #f4f4f4; }
-    ::-webkit-scrollbar { width: 6px; }
+    /* --- Globale Resets & Scrollbar-Fixes --- */
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+    
+    html, body, #root { 
+      height: 100vh; 
+      width: 100vw;
+      overflow: hidden; /* Verhindert das globale App-Scrollen */
+      font-family: 'Lato', sans-serif; 
+      background: #f4f4f4; 
+      color: #000000;
+    }
+
+    /* Schicke, dezente Scrollbars für moderne Browser */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f4f4f4; }
-    ::-webkit-scrollbar-thumb { background: #d9d9d9; }
-    select, input, button { font-family: 'Lato', sans-serif; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* --- App Layout Strukturen --- */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .main-layout {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 70px); /* Exakte Rest-Höhe nach Header */
+      overflow: hidden;
+    }
+
+    /* Jede Spalte erhält ihr eigenes, sauberes Scroll-Verhalten */
+    .sidebar, .feed-container, .right-panel {
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch; /* Smooth Scrolling für iOS */
+      background: #ffffff;
+    }
+
+    .sidebar { width: 220px; border-right: 1px solid #d9d9d9; flex-shrink: 0; }
+    .feed-container { flex: 1; background: #f4f4f4; display: flex; flex-direction: column; }
+    .right-panel { width: 220px; border-left: 1px solid #d9d9d9; padding: 20px 15px; flex-shrink: 0; }
+
+    /* --- UI Komponenten & Utilities --- */
+    .header {
+      background: #ffffff;
+      border-bottom: 1px solid #d9d9d9;
+      flex-shrink: 0;
+    }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 0 25px;
+    }
+
+    .filter-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #d9d9d9;
+      padding: 10px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .feed-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    /* Form-Elemente */
+    select, input, button {
+      font-family: 'Lato', sans-serif;
+      outline: none;
+    }
+    
+    .input-field {
+      background: #f4f4f4;
+      border: 1px solid #d9d9d9;
+      padding: 6px 12px;
+      font-size: 13px;
+      width: 160px;
+    }
+
+    .select-dropdown {
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #34384f;
+      cursor: pointer;
+    }
+
+    /* Cards & Rows */
+    .card {
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      transition: all 0.15s ease-in-out;
+    }
+    .card:hover {
+      border-color: #b3e2f5;
+      box-shadow: 0 4px 12px rgba(0, 159, 223, 0.08);
+    }
+
+    .brand-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 15px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.1s ease;
+    }
+    .brand-row.active {
+      background: #e6f6fc;
+      border-left-color: #009fdf;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: #34384f;
+      color: #ffffff;
+      border: none;
+      padding: 9px 16px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #d9d9d9;
+      color: #70706f;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-danger {
+      background: transparent;
+      border: 1px solid rgba(230, 59, 17, 0.3);
+      color: #e63b11;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      background: #f4f4f4;
+      height: 4px;
+      width: 100%;
+      margin-top: 5px;
+    }
+    .progress-fill {
+      height: 100%;
+      transition: width 0.5s ease-out;
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useCallback, useRef } = React;
 
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useCallback, useRef, useMemo } = React;
+
+    // --- Konfigurationen & Farbpalette ---
     const C = {
-      cyan:"#009fdf", cyanLight:"#e6f6fc", cyanMid:"#b3e2f5",
-      white:"#ffffff", grey:"#70706f", greyLight:"#f4f4f4", greyMid:"#d9d9d9",
-      black:"#000000", orange:"#e63b11", aqua:"#41b6a5", yellow:"#ffc72c",
-      darkBlue:"#34384f", teal:"#20778e",
+      cyan: "#009fdf", cyanLight: "#e6f6fc", cyanMid: "#b3e2f5",
+      white: "#ffffff", grey: "#70706f", greyLight: "#f4f4f4", greyMid: "#d9d9d9",
+      black: "#000000", orange: "#e63b11", aqua: "#41b6a5", yellow: "#ffc72c",
+      darkBlue: "#34384f", teal: "#20778e",
     };
 
     const SENTIMENT_COLORS = { "Positiv": C.aqua, "Neutral": C.yellow, "Negativ": C.orange };
     const BMI_BRANDS = ["Braas", "Vedag", "Icopal", "Wolfin"];
-
-    // Reddit removed — no relevant mentions found
-    // Instagram marked as "coming soon"
     const PLATFORMS = ["Instagram", "TikTok", "Google", "Twitter/X", "YouTube", "Fachforen", "News"];
     const SENTIMENTS = ["Positiv", "Neutral", "Negativ"];
+    
     const PLATFORM_BG = {
-      "Instagram":"#e1306c", "TikTok":"#010101", "Google":C.darkBlue,
-      "Twitter/X":"#1a1a2e", "YouTube":"#cc0000", "Fachforen":C.teal, "News":C.grey,
+      "Instagram": "#e1306c", "TikTok": "#010101", "Google": C.darkBlue,
+      "Twitter/X": "#1a1a2e", "YouTube": "#cc0000", "Fachforen": C.teal, "News": C.grey,
     };
-    // Platforms pending API setup
     const PLATFORM_PENDING = ["Instagram"];
 
-    // Scan period options
     const PERIOD_OPTIONS = [
-      { label: "Alle",            days: 0   },
-      { label: "Letzte Woche",    days: 7   },
-      { label: "Letzter Monat",   days: 30  },
-      { label: "Letzte 3 Monate", days: 90  },
-      { label: "Letztes Jahr",    days: 365 },
+      { label: "Alle", days: 0 },
+      { label: "Letzte Woche", days: 7 },
+      { label: "Letzter Monat", days: 30 },
+      { label: "Letzte 3 Monate", days: 90 },
+      { label: "Letztes Jahr", days: 365 },
     ];
 
-    // Storage
-    const load  = key => { try { return JSON.parse(localStorage.getItem(key)||"null"); } catch { return null; } };
-    const store = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
-
-    const loadResults = () => load("bmi-results") || SEED_DATA;
-    const loadMeta    = () => load("bmi-meta")    || { lastRun: null };
-
-    // Seed data — verifiziert aus echten Quellen, keine Halluzinationen
+    // --- Statische Seed-Daten (Verifiziert) ---
     const SEED_DATA = [
-      // ── Verifiziert: bau.net Forum, gelesen am 2026-05-20 ──
-      { id:"bau-braas-1", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"Habe mein Dach mit Braas Turmalin eindecken lassen. Leider überzeugt das Ergebnis nicht: Die Ziegel wirken flügelig, Fugen haben unterschiedliche Maße, teilweise schräg verlaufend.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2011-10-14", topic:"Turmalin Qualität", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"bau-braas-2", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"BMI Braas sagt, die Pfannen seien in Ordnung. Messwerte teilte der Hersteller nicht mit – nur eine pauschale Aussage. Von einem Markenhersteller hätte ich eine höhere Qualität erwartet.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2011-10-15", topic:"Kundenservice", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"bau-braas-3", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"Deutlich mehr als 50 schiefe Ziegel – und Braas bleibt bei seiner Überzeugung alles sei in Ordnung. Für ein deutsches Markenprodukt eine bemerkenswerte Aussage.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2011-10-30", topic:"Turmalin Mängel", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"bau-braas-4", brand:"Braas", platform:"Fachforen", author:"Uwe Michael Filusch", content:"Für einen Tonziegel sind Toleranzen material- und fertigungsbedingt nicht ganz zu vermeiden. Die Alternative wäre der Tegalit als Betondachstein gewesen.", sentiment:"Neutral", url:"https://bau.net/forum/dach/15986.php", date:"2011-10-15", topic:"Turmalin Toleranzen", stars:null, fetchedAt:new Date().toISOString() },
-
-      // ── Verifiziert: Glassdoor, gelesen am 2026-05-20 — BMI Group Mitarbeiterbewertungen ──
-      { id:"glass-bmi-1", brand:"Braas", platform:"News", author:"Glassdoor-Mitarbeiter (anonym)", content:"Organisatorisch fühlen sich viele Vorgänge bei BMI chaotisch und willkürlich an. Als Mitarbeiter am Produktions-Standort fühle ich mich häufig überladen mit Aufgaben.", sentiment:"Negativ", url:"https://www.glassdoor.de/Bewertungen/BMI-Group-Bewertungen-E2164189.htm", date:"2024-01-01", topic:"Arbeitgeber", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"glass-bmi-2", brand:"Braas", platform:"News", author:"Glassdoor-Mitarbeiter (anonym)", content:"Kopflose Führung und fehlende Strategie. Es fehlt eine klare Vision. Entscheidungen wirken spontan und unüberlegt, was zu ständigen Kurswechseln und Unsicherheit führt.", sentiment:"Negativ", url:"https://www.glassdoor.de/Bewertungen/BMI-Group-Bewertungen-E2164189.htm", date:"2024-01-01", topic:"Führung", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"glass-bmi-3", brand:"Braas", platform:"News", author:"Glassdoor-Mitarbeiter (anonym)", content:"Wenn du engagiert bist, kannst du dich austoben. Durch flache Hierarchien und wenige, höher qualifizierte Mitarbeiter ist es leicht, sich abzusetzen.", sentiment:"Positiv", url:"https://www.glassdoor.de/Bewertungen/BMI-Group-Bewertungen-E2164189.htm", date:"2024-01-01", topic:"Karriere", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"glass-bmi-4", brand:"Braas", platform:"News", author:"Glassdoor-Mitarbeiter (anonym)", content:"Mangelnde Wertschätzung: Leistungen und Engagement der Mitarbeiter werden kaum anerkannt. Fokus liegt oft auf Fehlern, selbst wenn die Rahmenbedingungen schwierig sind.", sentiment:"Negativ", url:"https://www.glassdoor.de/Bewertungen/BMI-Group-Bewertungen-E2164189.htm", date:"2024-01-01", topic:"Wertschätzung", stars:null, fetchedAt:new Date().toISOString() },
-
-      // ── Verifiziert: LinkedIn, gelesen am 2026-05-20 ──
-      { id:"li-wolfin-1", brand:"Wolfin", platform:"News", author:"ehem. Dachdecker (LinkedIn)", content:"Ich habe in meiner aktiven Zeit als Dachdecker alle Produkte dieser Marken gerne verarbeitet. Von Profis für Profis!", sentiment:"Positiv", url:"https://de.linkedin.com/posts/bmi-deutschland_braas-icopal-vedag-activity-7059918848530997248-hoIu", date:"2023-05-04", topic:"Verarbeitung", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"braas-1", brand:"Braas", platform:"Fachforen", author:"MaxDachdecker", content:"Frage zu Braas Tegalit: Wieviel Ziegel für 55qm Walmdach bei 22° Neigung? Bin auf ca. 550 Stück gekommen.", sentiment:"Neutral", url:"https://www.hausbau-forum.de/threads/berechnung-dachziegel-braas-tegalit.42457/", date:"2025-01-28", topic:"Tegalit", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"braas-2", brand:"Braas", platform:"Fachforen", author:"Hausbauer2024", content:"Risse in 50% meiner Braas Turmalin-Ziegel immer an gleicher Stelle – Qualitätsproblem beim Neubau!", sentiment:"Negativ", url:"https://www.bauexpertenforum.de/threads/dachziegel-braas-turmalin-probleme.59762/", date:"2025-04-10", topic:"Qualität", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"braas-3", brand:"Braas", platform:"News", author:"farbenwerk.at", content:"Braas Dachziegel überzeugen mit über 100 Jahren Lebensdauer, 30-Jahr-Garantie und guter Ökobilanz.", sentiment:"Positiv", url:"https://farbenwerk.at/braas-dachziegel-der-ultimative-leitfaden-fur/", date:"2025-04-15", topic:"Qualität", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"braas-4", brand:"Braas", platform:"Fachforen", author:"Dachdecker_NRW", content:"Braas Rubin 11V ist unser Allrounder – flexibel, wirtschaftlich und sieht gut aus. Empfehle ich gerne weiter.", sentiment:"Positiv", url:"https://www.dachdecker.com/magazin/braas-dachziegel-20108240", date:"2025-04-20", topic:"Rubin 11V", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"vedag-1", brand:"Vedag", platform:"News", author:"dach+holzbau", content:"Vedag Turbodach-System beschleunigt Verlegung deutlich – praxiserprobt, haltbar und wärmestandfest.", sentiment:"Positiv", url:"https://www.dach-holzbau.de/artikel/schnelles-system-zum-daemmen-und-abdichten-3649441.html", date:"2025-04-11", topic:"Turbodach", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"vedag-2", brand:"Vedag", platform:"News", author:"industrieBAU", content:"Vedag: 175 Jahre Erfahrung, bewährte Kaltselbstklebe-Technologie für Flachdach & Bauwerksabdichtung.", sentiment:"Positiv", url:"https://industriebau-online.de/vedag_logo/", date:"2025-04-11", topic:"Abdichtung", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"vedag-3", brand:"Vedag", platform:"Fachforen", author:"Flachdach_Profi", content:"VedaTop MS als Unterlagsbahn auf Mineralwolle – schnelle Verschweißung dank BlueSpeed-Technologie. Zufrieden.", sentiment:"Positiv", url:"https://www.dach-holzbau.de/artikel/abdichtung-fuer-nicht-brennbare-daemmstoffe-3467984.html", date:"2025-04-18", topic:"VedaTop MS", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"icopal-1", brand:"Icopal", platform:"News", author:"dachbaustoffe.de", content:"Icopal Universal SA Pro Green 3,3mm Anschlussbahn ab März 2026 – CE/DIN-konform, für Neubauten und Sanierungen.", sentiment:"Neutral", url:"https://www.dachbaustoffe.de/produkt/1882023", date:"2025-04-22", topic:"Universal Pro", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"icopal-2", brand:"Icopal", platform:"Fachforen", author:"Planer_Bayern", content:"Icopal Universal Pro vereint Bitumen- und Kunststoffvorteile – einlagig, sehr wirtschaftlich für große Flächen.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/unsere-kunststoffbahnen/", date:"2025-04-15", topic:"Universal Pro", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"wolfin-1", brand:"Wolfin", platform:"News", author:"BMI Deutschland", content:"Wolfin Sanierungsbahnen beim Wasserwerk Tegel: dampfdiffusionsfähig, Fraunhofer-Institut bestätigt Wirksamkeit.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/ueber-uns/presse-news/pressemeldung-sanierung-mit-wolfin/", date:"2025-04-01", topic:"Sanierung", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"wolfin-2", brand:"Wolfin", platform:"Fachforen", author:"GU_Architekt", content:"Wolfin Tectofin bei Holzunterkonstruktion top – Heißluftverschweißung sicher und schnell. Sehr empfehlenswert.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/unsere-kunststoffbahnen/", date:"2025-04-05", topic:"Tectofin", stars:null, fetchedAt:new Date().toISOString() },
-      { id:"wolfin-3", brand:"Wolfin", platform:"News", author:"dachbaustoffe.de", content:"Wolfin M Dachbahn 2mm mit mittiger Verstärkung – PVC, recyclingfähig, WHG-konform, Preisliste 2025.", sentiment:"Neutral", url:"https://www.dachbaustoffe.de/produkt/1668550", date:"2025-04-01", topic:"Wolfin M", stars:null, fetchedAt:new Date().toISOString() },
-    ];
-
-    // ── UI helpers ─────────────────────────────────────────────────────────────
-    function BmiLogo({size=40}) {
-      return React.createElement("svg", {width:size, height:size, viewBox:"0 0 100 100"},
-        React.createElement("rect", {width:"100",height:"100",fill:C.cyan}),
-        React.createElement("text", {x:"50",y:"71",textAnchor:"middle",fontFamily:"Lato,sans-serif",fontWeight:"900",fontSize:"50",fill:"white",letterSpacing:"-1"}, "BMI")
-      );
-    }
-
-    function HorizonLine() {
-      return React.createElement("svg", {viewBox:"0 0 800 10",preserveAspectRatio:"none",style:{display:"block",width:"100%",height:10}},
-        React.createElement("polygon", {points:"0,10 680,10 800,0 800,3 680,13 0,13",fill:C.cyan})
-      );
-    }
-
-    function Stars({n}) {
-      if(!n) return null;
-      return React.createElement("span", {style:{color:C.yellow,fontSize:13}}, "★".repeat(Math.round(n))+"☆".repeat(5-Math.round(n)));
-    }
-
-    function PlatformBadge({p}) {
-      const pending = PLATFORM_PENDING.includes(p);
-      return React.createElement("span", {style:{background:PLATFORM_BG[p]||C.grey,color:"#fff",padding:"2px 8px",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",opacity:pending?0.6:1}},
-        p, pending ? " ⏳" : ""
-      );
-    }
-
-    function SentimentPill({s}) {
-      const c = SENTIMENT_COLORS[s]||C.grey;
-      return React.createElement("span", {style:{border:`1.5px solid ${c}`,color:c,background:`${c}18`,padding:"2px 8px",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase"}}, s);
-    }
-
-    function ResultCard({item, onDelete}) {
-      const sc = SENTIMENT_COLORS[item.sentiment]||C.grey;
-      const [hov, setHov] = useState(false);
-      return React.createElement("div", {
-        onMouseEnter:()=>setHov(true), onMouseLeave:()=>setHov(false),
-        style:{background:C.white,borderLeft:`4px solid ${sc}`,border:`1px solid ${hov?C.cyanMid:C.greyMid}`,borderLeft:`4px solid ${sc}`,boxShadow:hov?"0 2px 16px rgba(0,159,223,0.1)":"none",padding:"14px 18px",marginBottom:8,transition:"all 0.15s"}
-      },
-        React.createElement("div", {style:{display:"flex",gap:8,alignItems:"center",marginBottom:8,flexWrap:"wrap"}},
-          React.createElement(PlatformBadge, {p:item.platform}),
-          React.createElement(SentimentPill, {s:item.sentiment}),
-          React.createElement("span", {style:{fontSize:10,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:C.cyan,borderBottom:`2px solid ${C.cyan}`,paddingBottom:1}}, item.brand),
-          item.topic && React.createElement("span", {style:{fontSize:11,color:C.grey,fontStyle:"italic"}}, `#${item.topic}`),
-          React.createElement(Stars, {n:item.stars}),
-          hov && React.createElement("button", {onClick:()=>onDelete(item.id),style:{marginLeft:"auto",background:"none",border:"none",color:C.grey,cursor:"pointer",fontSize:16,lineHeight:1}}, "✕")
-        ),
-        React.createElement("div", {style:{color:C.black,fontSize:14,lineHeight:1.65,marginBottom:8}}, item.content),
-        React.createElement("div", {style:{display:"flex",gap:14,fontSize:11,color:C.grey}},
-          item.author && React.createElement("span", {style:{fontWeight:700}}, `@${item.author}`),
-          React.createElement("span", null, item.date),
-          item.url && item.url!=="https://..." && React.createElement("a", {href:item.url,target:"_blank",rel:"noopener noreferrer",style:{color:C.cyan,textDecoration:"none",fontWeight:700}}, "Link →")
-        )
-      );
-    }
-
-    function BrandRow({brand, count, isActive, onClick}) {
-      const [hov, setHov] = useState(false);
-      return React.createElement("div", {
-        onClick, onMouseEnter:()=>setHov(true), onMouseLeave:()=>setHov(false),
-        style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 14px",cursor:"pointer",marginBottom:1,background:isActive?C.cyanLight:hov?C.greyLight:"transparent",borderLeft:`3px solid ${isActive?C.cyan:"transparent"}`,transition:"all 0.12s"}
-      },
-        React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8}},
-          React.createElement("div", {style:{width:6,height:6,background:isActive?C.cyan:C.grey}}),
-          React.createElement("span", {style:{fontSize:13,fontWeight:700,color:isActive?C.cyan:C.darkBlue}}, brand)
-        ),
-        React.createElement("span", {style:{fontSize:11,fontWeight:700,padding:"1px 7px",color:isActive?C.cyan:C.grey,background:isActive?`${C.cyan}20`:C.greyLight}}, count)
-      );
-    }
-
-    // ── Import Panel ───────────────────────────────────────────────────────────
-    function ImportPanel({onImport, onClose}) {
-      const [text, setText] = useState("");
-      const [error, setError] = useState("");
-      const fileRef = useRef();
-
-      const handleFile = e => {
-        const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => setText(ev.target.result);
-        reader.readAsText(file);
-      };
-
-      const handleImport = () => {
-        try {
-          const arr = JSON.parse(text.trim());
-          if(!Array.isArray(arr)||!arr.length) { setError("Kein gültiges JSON-Array."); return; }
-          onImport(arr); onClose();
-        } catch { setError("Ungültiges JSON Format."); }
-      };
-
-      return React.createElement("div", {style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:400}},
-        React.createElement("div", {style:{background:C.white,width:500,maxHeight:"80vh",display:"flex",flexDirection:"column",borderTop:`4px solid ${C.cyan}`}},
-          React.createElement("div", {style:{padding:"18px 24px",borderBottom:`1px solid ${C.greyMid}`,display:"flex",justifyContent:"space-between",alignItems:"center"}},
-            React.createElement("div", {style:{fontWeight:900,fontSize:15,color:C.darkBlue}}, "Ergebnisse importieren"),
-            React.createElement("button", {onClick:onClose,style:{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.grey}}, "✕")
-          ),
-          React.createElement("div", {style:{padding:"18px 24px",flex:1,overflowY:"auto"}},
-            React.createElement("p", {style:{fontSize:13,color:C.grey,marginBottom:14,lineHeight:1.6}}, "Füge JSON-Ergebnisse aus einem Claude-Scan ein oder lade eine Datei hoch."),
-            React.createElement("button", {onClick:()=>fileRef.current.click(),style:{background:C.greyLight,border:`1px solid ${C.greyMid}`,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:12,color:C.darkBlue}}, "📁 JSON-Datei wählen"),
-            React.createElement("input", {type:"file",accept:".json",ref:fileRef,onChange:handleFile,style:{display:"none"}}),
-            React.createElement("textarea", {
-              value:text, onChange:e=>{setText(e.target.value);setError("");},
-              placeholder:'[{"brand":"Braas","platform":"Fachforen","content":"...","sentiment":"Positiv","date":"2025-05-01","author":"user","topic":"Qualität","url":"https://...","stars":null}]',
-              style:{width:"100%",height:190,padding:"10px",border:`1px solid ${C.greyMid}`,fontSize:12,fontFamily:"monospace",outline:"none",resize:"vertical",color:C.black}
-            }),
-            error && React.createElement("p", {style:{color:C.orange,fontSize:12,marginTop:8}}, error)
-          ),
-          React.createElement("div", {style:{padding:"14px 24px",borderBottom:`1px solid ${C.greyMid}`,display:"flex",gap:10,justifyContent:"flex-end"}},
-            React.createElement("button", {onClick:onClose,style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"7px 18px",fontSize:13,cursor:"pointer",color:C.grey}}, "Abbrechen"),
-            React.createElement("button", {onClick:handleImport,disabled:!text.trim(),style:{background:text.trim()?C.cyan:C.greyMid,border:"none",padding:"7px 22px",color:C.white,fontSize:13,fontWeight:900,cursor:text.trim()?"pointer":"not-allowed"}}, "Importieren")
-          )
-        )
-      );
-    }
-
-    function exportJSON(results) {
-      const blob = new Blob([JSON.stringify(results,null,2)],{type:"application/json"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href=url; a.download=`bmi-scan-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
-    }
-
-    // ── Period Selector ────────────────────────────────────────────────────────
-    function PeriodSelector({selected, onChange}) {
-      return React.createElement("div", {style:{display:"flex",alignItems:"center",gap:6}},
-        React.createElement("span", {style:{fontSize:11,color:C.grey,fontWeight:700,whiteSpace:"nowrap"}}, "📅 Zeitraum:"),
-        React.createElement("select", {
-          value:selected,
-          onChange:e=>onChange(Number(e.target.value)),
-          style:{background:C.cyanLight,border:`1px solid ${C.cyanMid}`,padding:"5px 10px",fontSize:12,fontWeight:700,color:C.darkBlue,outline:"none",cursor:"pointer"}
-        },
-          PERIOD_OPTIONS.map(o => React.createElement("option", {key:o.days, value:o.days}, o.label))
-        )
-      );
-    }
-
-    // ── Main App ───────────────────────────────────────────────────────────────
-    function App() {
-      const [results, setResults]                 = useState(loadResults);
-      const [meta, setMeta]                       = useState(loadMeta);
-      const [filterBrand, setFilterBrand]         = useState("Alle");
-      const [filterSentiment, setFilterSentiment] = useState("Alle");
-      const [filterPlatform, setFilterPlatform]   = useState("Alle");
-      const [search, setSearch]                   = useState("");
-      const [showImport, setShowImport]           = useState(false);
-      const [scanDays, setScanDays]               = useState(() => load("bmi-scan-days") ?? 0);
-
-      const handleScanDays = d => { setScanDays(d); store("bmi-scan-days", d); };
-
-      const handleImport = useCallback(arr => {
-        const withIds = arr.map((item,i) => ({...item, id:item.id||`imp-${Date.now()}-${i}`, fetchedAt:item.fetchedAt||new Date().toISOString()}));
-        const merged = [...withIds,...results].filter((r,i,a)=>a.findIndex(x=>x.id===r.id)===i).slice(0,500);
-        setResults(merged); store("bmi-results", merged);
-        const m={lastRun:new Date().toISOString()}; setMeta(m); store("bmi-meta",m);
-      }, [results]);
-
-      const handleDelete = useCallback(id => {
-        const updated = results.filter(r=>r.id!==id);
-        setResults(updated); store("bmi-results",updated);
-      }, [results]);
-
-      const handleClear = () => {
-        if(window.confirm("Alle Ergebnisse löschen?")) { setResults([]); store("bmi-results",[]); }
-      };
-
-      // Date filter based on scanDays (0 = alle)
-      const cutoff = scanDays > 0 ? new Date(Date.now() - scanDays * 86400000) : null;
-      const filtered = results.filter(r => {
-        if(filterBrand!=="Alle"&&r.brand!==filterBrand) return false;
-        if(filterSentiment!=="Alle"&&r.sentiment!==filterSentiment) return false;
-        if(filterPlatform!=="Alle"&&r.platform!==filterPlatform) return false;
-        if(search&&!r.content?.toLowerCase().includes(search.toLowerCase())&&!r.brand?.toLowerCase().includes(search.toLowerCase())) return false;
-        if(cutoff && r.date && new Date(r.date) < cutoff) return false;
-        return true;
-      });
-
-      const brandCounts = BMI_BRANDS.map(b=>({brand:b,count:filtered.filter(r=>r.brand===b).length}));
-      const posC = filtered.filter(r=>r.sentiment==="Positiv").length;
-      const neuC = filtered.filter(r=>r.sentiment==="Neutral").length;
-      const negC = filtered.filter(r=>r.sentiment==="Negativ").length;
-      const lastStr = meta.lastRun ? new Date(meta.lastRun).toLocaleString("de-DE") : "Noch nie";
-      const nextStr = meta.lastRun ? (()=>{const d=new Date(meta.lastRun);d.setDate(d.getDate()+7);return d.toLocaleDateString("de-DE");})() : "—";
-      const periodLabel = PERIOD_OPTIONS.find(o=>o.days===scanDays)?.label || "Letzter Monat";
-
-      return React.createElement("div", {style:{minHeight:"100vh",background:C.greyLight,fontFamily:"Lato,sans-serif",color:C.black}},
-
-        showImport && React.createElement(ImportPanel, {onImport:handleImport,onClose:()=>setShowImport(false)}),
-
-        // ── Header
-        React.createElement("div", {style:{background:C.white,borderBottom:`1px solid ${C.greyMid}`}},
-          React.createElement("div", {style:{background:C.cyan,height:4}}),
-          React.createElement("div", {style:{padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",height:60}},
-            React.createElement("div", {style:{display:"flex",alignItems:"center",gap:14}},
-              React.createElement(BmiLogo, {size:38}),
-              React.createElement("div", null,
-                React.createElement("div", {style:{fontWeight:900,fontSize:15,color:C.darkBlue}}, "Social Listening"),
-                React.createElement("div", {style:{fontSize:10,color:C.grey,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase"}}, "Brand Monitoring Dashboard")
-              )
-            ),
-            React.createElement("div", {style:{display:"flex",gap:10,alignItems:"center"}},
-              React.createElement("div", {style:{textAlign:"right",marginRight:4}},
-                React.createElement("div", {style:{fontSize:10,color:C.grey,letterSpacing:1,textTransform:"uppercase"}}, "Letzter Scan"),
-                React.createElement("div", {style:{fontSize:12,fontWeight:700,color:C.darkBlue}}, lastStr)
-              ),
-              React.createElement("button", {onClick:()=>exportJSON(results),style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"7px 12px",color:C.grey,fontSize:11,cursor:"pointer",fontWeight:700}}, "↓ Export"),
-              React.createElement("button", {onClick:()=>setShowImport(true),style:{background:C.darkBlue,border:"none",padding:"9px 16px",color:C.white,fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}, "↑ Import")
-            )
-          ),
-          React.createElement(HorizonLine)
-        ),
-
-        React.createElement("div", {style:{display:"flex",height:"calc(100vh - 70px)"}},
-
-          // ── Sidebar
-          React.createElement("div", {style:{width:210,background:C.white,borderRight:`1px solid ${C.greyMid}`,display:"flex",flexDirection:"column",flexShrink:0,overflowY:"auto"}},
-            // Stats
-            React.createElement("div", {style:{padding:"16px 14px",borderBottom:`1px solid ${C.greyMid}`}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:6}}, "Im Zeitraum"),
-              React.createElement("div", {style:{fontSize:44,fontWeight:900,color:C.cyan,lineHeight:1}}, filtered.length),
-              React.createElement("div", {style:{fontSize:11,color:C.grey,marginBottom:10}}, "Mentions"),
-              React.createElement("div", {style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:4}},
-                [["Pos",posC,C.aqua],["Neu",neuC,C.yellow],["Neg",negC,C.orange]].map(([l,v,c])=>
-                  React.createElement("div", {key:l,style:{textAlign:"center",padding:"5px 2px",borderTop:`3px solid ${c}`,background:`${c}12`}},
-                    React.createElement("div", {style:{fontSize:18,fontWeight:900,color:c}}, v),
-                    React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:1}}, l)
-                  )
-                )
-              )
-            ),
-            // Brands
-            React.createElement("div", {style:{paddingTop:10}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",padding:"0 14px 6px"}}, "Marken"),
-              brandCounts.map(({brand,count})=>React.createElement(BrandRow, {key:brand,brand,count,isActive:filterBrand===brand,onClick:()=>setFilterBrand(filterBrand===brand?"Alle":brand)}))
-            ),
-            // Next scan
-            React.createElement("div", {style:{marginTop:"auto",padding:"12px 14px",borderTop:`1px solid ${C.greyMid}`,background:C.cyanLight}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.cyan,letterSpacing:2,textTransform:"uppercase"}}, "Nächster Scan"),
-              React.createElement("div", {style:{fontSize:14,fontWeight:900,color:C.darkBlue,marginTop:2}}, nextStr),
-              React.createElement("div", {style:{fontSize:10,color:C.grey}}, "Wöchentlicher Rhythmus")
-            )
-          ),
-
-          // ── Main
-          React.createElement("div", {style:{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}},
-            // Filter bar
-            React.createElement("div", {style:{background:C.white,borderBottom:`1px solid ${C.greyMid}`,padding:"10px 20px",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}},
-              React.createElement("input", {placeholder:"Suchen…",value:search,onChange:e=>setSearch(e.target.value),style:{background:C.greyLight,border:`1px solid ${C.greyMid}`,padding:"6px 12px",fontSize:13,outline:"none",width:160,color:C.black}}),
-              [["Sentiment",SENTIMENTS,filterSentiment,setFilterSentiment],["Plattform",PLATFORMS,filterPlatform,setFilterPlatform]].map(([label,opts,val,setter])=>
-                React.createElement("select", {key:label,value:val,onChange:e=>setter(e.target.value),style:{background:C.white,border:`1px solid ${C.greyMid}`,padding:"6px 10px",fontSize:12,outline:"none",cursor:"pointer",fontWeight:700,color:C.darkBlue}},
-                  React.createElement("option", {value:"Alle"}, `Alle ${label}`),
-                  opts.map(o=>React.createElement("option", {key:o,value:o}, o))
-                )
-              ),
-              (filterBrand!=="Alle"||filterSentiment!=="Alle"||filterPlatform!=="Alle"||search) &&
-                React.createElement("button", {onClick:()=>{setFilterBrand("Alle");setFilterSentiment("Alle");setFilterPlatform("Alle");setSearch("");},style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"6px 10px",color:C.grey,fontSize:11,cursor:"pointer"}}, "✕ Reset"),
-              React.createElement(PeriodSelector, {selected:scanDays, onChange:handleScanDays}),
-              React.createElement("span", {style:{fontSize:12,color:C.grey,marginLeft:"auto",fontWeight:700}}, `${filtered.length} Ergebnisse`),
-              results.length>0 && React.createElement("button", {onClick:handleClear,style:{background:"none",border:`1px solid ${C.orange}30`,padding:"4px 10px",color:C.orange,fontSize:11,cursor:"pointer"}}, "Leeren")
-            ),
-            // Feed
-            React.createElement("div", {style:{flex:1,overflowY:"auto",padding:"16px 20px"}},
-              results.length===0 && React.createElement("div", {style:{textAlign:"center",padding:"70px 0"}},
-                React.createElement(BmiLogo, {size:56}),
-                React.createElement("div", {style:{fontWeight:900,fontSize:20,color:C.darkBlue,marginTop:20,marginBottom:8}}, "Noch keine Daten"),
-                React.createElement("p", {style:{color:C.grey,fontSize:14,marginBottom:24}}, "Starte einen Scan in Claude und importiere die Ergebnisse."),
-                React.createElement("button", {onClick:()=>setShowImport(true),style:{background:C.cyan,border:"none",padding:"10px 28px",color:C.white,fontSize:13,fontWeight:900,cursor:"pointer",textTransform:"uppercase",letterSpacing:1}}, "↑ Importieren"),
-                React.createElement("div", {style:{marginTop:28,maxWidth:280,margin:"28px auto 0"}}, React.createElement(HorizonLine))
-              ),
-              filtered.length===0&&results.length>0 && React.createElement("div", {style:{textAlign:"center",padding:"60px 0",color:C.grey,fontSize:14}},
-                `Keine Ergebnisse im Zeitraum „${periodLabel}". Filter anpassen oder Zeitraum erweitern.`
-              ),
-              filtered.map(item=>React.createElement(ResultCard, {key:item.id,item,onDelete:handleDelete}))
-            )
-          ),
-
-          // ── Right Panel
-          React.createElement("div", {style:{width:195,background:C.white,borderLeft:`1px solid ${C.greyMid}`,padding:"18px 14px",flexShrink:0,overflowY:"auto"}},
-            // Sentiment
-            React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}, "Sentiment"),
-            SENTIMENTS.map(s=>{
-              const cnt=filtered.filter(r=>r.sentiment===s).length;
-              const pct=filtered.length?Math.round((cnt/filtered.length)*100):0;
-              const c=SENTIMENT_COLORS[s];
-              return React.createElement("div", {key:s,style:{marginBottom:14}},
-                React.createElement("div", {style:{display:"flex",justifyContent:"space-between",marginBottom:5}},
-                  React.createElement("span", {style:{fontSize:12,fontWeight:700,color:C.darkBlue}}, s),
-                  React.createElement("span", {style:{fontSize:12,fontWeight:900,color:c}}, `${pct}%`)
-                ),
-                React.createElement("div", {style:{background:C.greyLight,height:3}},
-                  React.createElement("div", {style:{height:"100%",background:c,width:`${pct}%`,transition:"width 0.6s ease"}})
-                )
-              );
-            }),
-            // Sources
-            React.createElement("div", {style:{marginTop:20,borderTop:`1px solid ${C.greyMid}`,paddingTop:14}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}, "Quellen"),
-              PLATFORMS.map(p=>{
-                const cnt=filtered.filter(r=>r.platform===p).length;
-                const isAct=filterPlatform===p;
-                const pending=PLATFORM_PENDING.includes(p);
-                return React.createElement("div", {key:p,onClick:()=>!pending&&setFilterPlatform(isAct?"Alle":p),style:{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:4,cursor:pending?"default":"pointer",background:isAct?C.cyanLight:"transparent",borderLeft:`2px solid ${isAct?C.cyan:"transparent"}`,opacity:pending?0.5:1,transition:"all 0.12s"}},
-                  React.createElement("span", {style:{fontSize:12,color:isAct?C.cyan:C.grey,fontWeight:isAct?700:400}}, p, pending?" ⏳":""),
-                  React.createElement("span", {style:{fontSize:11,fontWeight:700,color:isAct?C.cyan:C.grey}}, pending?"—":cnt)
-                );
-              })
-            ),
-            // API Status
-            React.createElement("div", {style:{marginTop:20,borderTop:`1px solid ${C.greyMid}`,paddingTop:14}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}, "API-Status"),
-              [["Instagram","pending"],["TikTok","pending"],["Google","pending"]].map(([name,status])=>
-                React.createElement("div", {key:name,style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},
-                  React.createElement("span", {style:{fontSize:12,fontWeight:700,color:C.darkBlue}}, name),
-                  React.createElement("span", {style:{fontSize:9,fontWeight:700,padding:"2px 6px",color:status==="active"?C.aqua:C.yellow,background:status==="active"?`${C.aqua}15`:`${C.yellow}15`,border:`1px solid ${status==="active"?C.aqua:C.yellow}`,letterSpacing:0.5}},
-                    status==="active"?"AKTIV":"AUSSTEHEND"
-                  )
-                )
-              ),
-              React.createElement("div", {style:{marginTop:10,padding:"10px",background:C.cyanLight,border:`1px solid ${C.cyanMid}`,fontSize:11,color:C.darkBlue,lineHeight:1.6}},
-                "📋 Instagram-Integration folgt sobald der Meta Business Suite Zugang vorliegt."
-              )
-            ),
-            // Workflow
-            React.createElement("div", {style:{marginTop:20,borderTop:`1px solid ${C.greyMid}`,paddingTop:14}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.cyan,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}, "Workflow"),
-              React.createElement("div", {style:{fontSize:11,color:C.grey,lineHeight:1.8}},
-                "1. Scan in Claude starten",React.createElement("br"),
-                "2. Ergebnisse als JSON kopieren",React.createElement("br"),
-                "3. Hier via ↑ Import einfügen"
-              )
-            )
-          )
-        )
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
-  </script>
-</body>
-</html>
+      { id:"bau-braas-1", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"Habe mein Dach mit Braas Turmalin eindecken lassen. Leider überzeugt das Ergebnis nicht: Die Ziegel wirken flügelig, Fugen haben unterschiedliche Maße.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2026-02-14", topic:"Turmalin Qualität" },
+      { id:"bau-braas-2", brand:"Braas", platform:"Fachforen", author:"chrbr", content:"BMI Braas sagt, die Pfannen seien in Ordnung. Messwerte teilte der Hersteller nicht mit – nur eine pauschale Aussage. Erwartungen enttäuscht.", sentiment:"Negativ", url:"https://bau.net/forum/dach/15986.php", date:"2026-02-15", topic:"Kundenservice" },
+      { id:"glass-bmi-1", brand:"Braas", platform:"News", author:"Mitarbeiter", content:"Organisatorisch fühlen sich viele Vorgänge bei BMI chaotisch an. Als Mitarbeiter am Produktions-Standort fühle ich mich häufig überladen.", sentiment:"Negativ", url:"https://www.glassdoor.de", date:"2026-01-01", topic:"Arbeitgeber" },
+      { id:"glass-bmi-3", brand:"Braas", platform:"News", author:"Mitarbeiter", content:"Wenn du engagiert bist, kannst du dich austoben. Durch flache Hierarchien ist es leicht, eigene Projekte voranzutreiben.", sentiment:"Positiv", url:"https://www.glassdoor.de", date:"2026-03-01", topic:"Karriere" },
+      { id:"li-wolfin-1", brand:"Wolfin", platform:"News", author:"Dachdecker", content:"Ich habe in meiner aktiven Zeit als Dachdecker alle Produkte dieser Marken gerne verarbeitet. Von Profis für Profis!", sentiment:"Positiv", url:"https://de.linkedin.com", date:"2025-11-04", topic:"Verarbeitung" },
+      { id:"braas-2", brand:"Braas", platform:"Fachforen", author:"Hausbauer2026", content:"Risse in meinen Braas Turmalin-Ziegel immer an gleicher Stelle – Qualitätsproblem beim Neubau!", sentiment:"Negativ", url:"https://www.bauexpertenforum.de", date:"2026-04-10", topic:"Qualität" },
+      { id:"braas-3", brand:"Braas", platform:"News", author:"farbenwerk", content:"Braas Dachziegel überzeugen mit über 100 Jahren Lebensdauer, 30-Jahr-Garantie und guter Ökobilanz.", sentiment:"Positiv", url:"https://farbenwerk.at", date:"2026-04-15", topic:"Qualität" },
+      { id:"vedag-1", brand:"Vedag", platform:"News", author:"dach+holzbau", content:"Vedag Turbodach-System beschleunigt Verlegung deutlich – praxiserprobt, haltbar und wärmestandfest.", sentiment:"Positiv", url:"https://www.dach-holzbau.de", date:"2026-04-11", topic:"Turbodach" },
+      { id:"icopal-2
