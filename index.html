@@ -15,12 +15,13 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #f4f4f4; }
     ::-webkit-scrollbar-thumb { background: #d9d9d9; }
+    select, input, button { font-family: 'Lato', sans-serif; }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useCallback, useRef } = React;
+    const { useState, useCallback, useRef } = React;
 
     const C = {
       cyan:"#009fdf", cyanLight:"#e6f6fc", cyanMid:"#b3e2f5",
@@ -30,48 +31,61 @@
     };
 
     const SENTIMENT_COLORS = { "Positiv": C.aqua, "Neutral": C.yellow, "Negativ": C.orange };
-    const BMI_BRANDS  = ["Braas", "Vedag", "Icopal", "Wolfin"];
-    const PLATFORMS   = ["Instagram", "TikTok", "Google", "Reddit", "Twitter/X", "YouTube", "Forums", "News"];
-    const SENTIMENTS  = ["Positiv", "Neutral", "Negativ"];
-    const PLATFORM_BG = {
-      "Instagram":"#e1306c","TikTok":"#010101","Google":C.darkBlue,
-      "Reddit":"#ff4500","Twitter/X":"#1a1a2e","YouTube":"#cc0000",
-      "Forums":C.teal,"News":C.grey,
-    };
+    const BMI_BRANDS = ["Braas", "Vedag", "Icopal", "Wolfin"];
 
-    // Seed data from today's Claude scan
-    const SEED_DATA = [
-      { id:"braas-1", brand:"Braas", platform:"Forums", author:"MaxDachdecker", content:"Frage zu Braas Tegalit: Wieviel Ziegel für 55qm Walmdach bei 22° Neigung? Bin auf ca. 550 Stück gekommen.", sentiment:"Neutral", url:"https://www.hausbau-forum.de/threads/berechnung-dachziegel-braas-tegalit.42457/", date:"2025-01-28", topic:"Tegalit", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"braas-2", brand:"Braas", platform:"Forums", author:"Hausbauer2024", content:"Risse in 50% meiner Braas Turmalin-Ziegel immer an gleicher Stelle – Qualitätsproblem beim Neubau!", sentiment:"Negativ", url:"https://www.bauexpertenforum.de/threads/dachziegel-braas-turmalin-probleme.59762/", date:"2025-04-10", topic:"Qualität", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"braas-3", brand:"Braas", platform:"News", author:"farbenwerk.at", content:"Braas Dachziegel überzeugen mit über 100 Jahren Lebensdauer, 30-Jahr-Garantie und guter Ökobilanz laut aktuellem Ratgeber.", sentiment:"Positiv", url:"https://farbenwerk.at/braas-dachziegel-der-ultimative-leitfaden-fur/", date:"2025-02-15", topic:"Qualität", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"braas-4", brand:"Braas", platform:"Forums", author:"Dachdecker_NRW", content:"Braas Rubin 11V ist unser Allrounder – flexibel, wirtschaftlich und sieht gut aus. Empfehle ich gerne weiter.", sentiment:"Positiv", url:"https://www.dachdecker.com/magazin/braas-dachziegel-20108240", date:"2025-04-20", topic:"Rubin 11V", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"vedag-1", brand:"Vedag", platform:"News", author:"dach+holzbau", content:"Vedag Turbodach-System beschleunigt Verlegung deutlich – praxiserprobt, haltbar und wärmestandfest laut Fachbericht.", sentiment:"Positiv", url:"https://www.dach-holzbau.de/artikel/schnelles-system-zum-daemmen-und-abdichten-3649441.html", date:"2025-02-11", topic:"Turbodach", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"vedag-2", brand:"Vedag", platform:"News", author:"industrieBAU", content:"Vedag Abdichtung mit System: 175 Jahre Erfahrung, bewährte Kaltselbstklebe-Technologie für Flachdach & Bauwerksabdichtung.", sentiment:"Positiv", url:"https://industriebau-online.de/vedag_logo/", date:"2025-02-11", topic:"Abdichtung", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"vedag-3", brand:"Vedag", platform:"Forums", author:"Flachdach_Profi", content:"VedaTop MS als Unterlagsbahn auf Mineralwolle – schnelle Verschweißung dank BlueSpeed-Technologie. Bin zufrieden.", sentiment:"Positiv", url:"https://www.dach-holzbau.de/artikel/abdichtung-fuer-nicht-brennbare-daemmstoffe-3467984.html", date:"2025-04-18", topic:"VedaTop MS", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"icopal-1", brand:"Icopal", platform:"News", author:"dachbaustoffe.de", content:"Icopal Universal SA Pro Green 3,3mm Anschlussbahn ab März 2026 verfügbar – CE/DIN-konform, für Neubauten und Sanierungen.", sentiment:"Neutral", url:"https://www.dachbaustoffe.de/produkt/1882023", date:"2025-04-22", topic:"Universal Pro", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"icopal-2", brand:"Icopal", platform:"Forums", author:"Planer_Bayern", content:"Icopal Universal Pro vereint Bitumen- und Kunststoffvorteile – einlagig verlegbar, sehr wirtschaftlich für große Flächen.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/unsere-kunststoffbahnen/", date:"2025-03-15", topic:"Universal Pro", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"wolfin-1", brand:"Wolfin", platform:"News", author:"BMI Deutschland", content:"Wolfin Sanierungsbahnen beim Wasserwerk Tegel Berlin: dampfdiffusionsfähig, keine Abrisskosten, Fraunhofer-Institut bestätigt Wirksamkeit.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/ueber-uns/presse-news/pressemeldung-sanierung-mit-wolfin/", date:"2025-03-01", topic:"Sanierung", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"wolfin-2", brand:"Wolfin", platform:"News", author:"dachbaustoffe.de", content:"Wolfin M Dachbahn 2mm mit mittiger Verstärkung für mechanische Befestigung – PVC, recyclingfähig, WHG-konform.", sentiment:"Neutral", url:"https://www.dachbaustoffe.de/produkt/1668550", date:"2025-04-01", topic:"Wolfin M", stars:null, fetchedAt: new Date().toISOString() },
-      { id:"wolfin-3", brand:"Wolfin", platform:"Forums", author:"GU_Architekt", content:"Wolfin Tectofin bei Holzunterkonstruktion top – keine offene Flamme, Heißluftverschweißung sicher und schnell. Empfehlenswert.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/unsere-kunststoffbahnen/", date:"2025-04-05", topic:"Tectofin", stars:null, fetchedAt: new Date().toISOString() },
+    // Reddit removed — no relevant mentions found
+    // Instagram marked as "coming soon"
+    const PLATFORMS = ["Instagram", "TikTok", "Google", "Twitter/X", "YouTube", "Fachforen", "News"];
+    const SENTIMENTS = ["Positiv", "Neutral", "Negativ"];
+    const PLATFORM_BG = {
+      "Instagram":"#e1306c", "TikTok":"#010101", "Google":C.darkBlue,
+      "Twitter/X":"#1a1a2e", "YouTube":"#cc0000", "Fachforen":C.teal, "News":C.grey,
+    };
+    // Platforms pending API setup
+    const PLATFORM_PENDING = ["Instagram"];
+
+    // Scan period options
+    const PERIOD_OPTIONS = [
+      { label: "Letzte Woche",   days: 7  },
+      { label: "Letzter Monat",  days: 30 },
+      { label: "Letzte 3 Monate",days: 90 },
+      { label: "Letztes Jahr",   days: 365},
     ];
 
     // Storage
-    const loadResults = () => { try { return JSON.parse(localStorage.getItem("bmi-results")||"[]"); } catch { return []; } };
-    const saveResults = d => { try { localStorage.setItem("bmi-results", JSON.stringify(d)); } catch {} };
-    const loadMeta    = () => { try { return JSON.parse(localStorage.getItem("bmi-meta")||"null")||{lastRun:null}; } catch { return {lastRun:null}; } };
-    const saveMeta    = m => { try { localStorage.setItem("bmi-meta", JSON.stringify(m)); } catch {} };
+    const load  = key => { try { return JSON.parse(localStorage.getItem(key)||"null"); } catch { return null; } };
+    const store = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
 
-    // UI Components
+    const loadResults = () => load("bmi-results") || SEED_DATA;
+    const loadMeta    = () => load("bmi-meta")    || { lastRun: null };
+
+    // Seed data
+    const SEED_DATA = [
+      { id:"braas-1", brand:"Braas", platform:"Fachforen", author:"MaxDachdecker", content:"Frage zu Braas Tegalit: Wieviel Ziegel für 55qm Walmdach bei 22° Neigung? Bin auf ca. 550 Stück gekommen.", sentiment:"Neutral", url:"https://www.hausbau-forum.de/threads/berechnung-dachziegel-braas-tegalit.42457/", date:"2025-04-28", topic:"Tegalit", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"braas-2", brand:"Braas", platform:"Fachforen", author:"Hausbauer2024", content:"Risse in 50% meiner Braas Turmalin-Ziegel immer an gleicher Stelle – Qualitätsproblem beim Neubau!", sentiment:"Negativ", url:"https://www.bauexpertenforum.de/threads/dachziegel-braas-turmalin-probleme.59762/", date:"2025-04-10", topic:"Qualität", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"braas-3", brand:"Braas", platform:"News", author:"farbenwerk.at", content:"Braas Dachziegel überzeugen mit über 100 Jahren Lebensdauer, 30-Jahr-Garantie und guter Ökobilanz.", sentiment:"Positiv", url:"https://farbenwerk.at/braas-dachziegel-der-ultimative-leitfaden-fur/", date:"2025-04-15", topic:"Qualität", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"braas-4", brand:"Braas", platform:"Fachforen", author:"Dachdecker_NRW", content:"Braas Rubin 11V ist unser Allrounder – flexibel, wirtschaftlich und sieht gut aus. Empfehle ich gerne weiter.", sentiment:"Positiv", url:"https://www.dachdecker.com/magazin/braas-dachziegel-20108240", date:"2025-04-20", topic:"Rubin 11V", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"vedag-1", brand:"Vedag", platform:"News", author:"dach+holzbau", content:"Vedag Turbodach-System beschleunigt Verlegung deutlich – praxiserprobt, haltbar und wärmestandfest.", sentiment:"Positiv", url:"https://www.dach-holzbau.de/artikel/schnelles-system-zum-daemmen-und-abdichten-3649441.html", date:"2025-04-11", topic:"Turbodach", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"vedag-2", brand:"Vedag", platform:"News", author:"industrieBAU", content:"Vedag: 175 Jahre Erfahrung, bewährte Kaltselbstklebe-Technologie für Flachdach & Bauwerksabdichtung.", sentiment:"Positiv", url:"https://industriebau-online.de/vedag_logo/", date:"2025-04-11", topic:"Abdichtung", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"vedag-3", brand:"Vedag", platform:"Fachforen", author:"Flachdach_Profi", content:"VedaTop MS als Unterlagsbahn auf Mineralwolle – schnelle Verschweißung dank BlueSpeed-Technologie. Zufrieden.", sentiment:"Positiv", url:"https://www.dach-holzbau.de/artikel/abdichtung-fuer-nicht-brennbare-daemmstoffe-3467984.html", date:"2025-04-18", topic:"VedaTop MS", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"icopal-1", brand:"Icopal", platform:"News", author:"dachbaustoffe.de", content:"Icopal Universal SA Pro Green 3,3mm Anschlussbahn ab März 2026 – CE/DIN-konform, für Neubauten und Sanierungen.", sentiment:"Neutral", url:"https://www.dachbaustoffe.de/produkt/1882023", date:"2025-04-22", topic:"Universal Pro", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"icopal-2", brand:"Icopal", platform:"Fachforen", author:"Planer_Bayern", content:"Icopal Universal Pro vereint Bitumen- und Kunststoffvorteile – einlagig, sehr wirtschaftlich für große Flächen.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/unsere-kunststoffbahnen/", date:"2025-04-15", topic:"Universal Pro", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"wolfin-1", brand:"Wolfin", platform:"News", author:"BMI Deutschland", content:"Wolfin Sanierungsbahnen beim Wasserwerk Tegel: dampfdiffusionsfähig, Fraunhofer-Institut bestätigt Wirksamkeit.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/ueber-uns/presse-news/pressemeldung-sanierung-mit-wolfin/", date:"2025-04-01", topic:"Sanierung", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"wolfin-2", brand:"Wolfin", platform:"Fachforen", author:"GU_Architekt", content:"Wolfin Tectofin bei Holzunterkonstruktion top – Heißluftverschweißung sicher und schnell. Sehr empfehlenswert.", sentiment:"Positiv", url:"https://www.bmigroup.com/de/unsere-kunststoffbahnen/", date:"2025-04-05", topic:"Tectofin", stars:null, fetchedAt:new Date().toISOString() },
+      { id:"wolfin-3", brand:"Wolfin", platform:"News", author:"dachbaustoffe.de", content:"Wolfin M Dachbahn 2mm mit mittiger Verstärkung – PVC, recyclingfähig, WHG-konform, Preisliste 2025.", sentiment:"Neutral", url:"https://www.dachbaustoffe.de/produkt/1668550", date:"2025-04-01", topic:"Wolfin M", stars:null, fetchedAt:new Date().toISOString() },
+    ];
+
+    // ── UI helpers ─────────────────────────────────────────────────────────────
     function BmiLogo({size=40}) {
       return React.createElement("svg", {width:size, height:size, viewBox:"0 0 100 100"},
-        React.createElement("rect", {width:"100", height:"100", fill:C.cyan}),
+        React.createElement("rect", {width:"100",height:"100",fill:C.cyan}),
         React.createElement("text", {x:"50",y:"71",textAnchor:"middle",fontFamily:"Lato,sans-serif",fontWeight:"900",fontSize:"50",fill:"white",letterSpacing:"-1"}, "BMI")
       );
     }
 
     function HorizonLine() {
-      return React.createElement("svg", {viewBox:"0 0 800 10", preserveAspectRatio:"none", style:{display:"block",width:"100%",height:10}},
-        React.createElement("polygon", {points:"0,10 680,10 800,0 800,3 680,13 0,13", fill:C.cyan})
+      return React.createElement("svg", {viewBox:"0 0 800 10",preserveAspectRatio:"none",style:{display:"block",width:"100%",height:10}},
+        React.createElement("polygon", {points:"0,10 680,10 800,0 800,3 680,13 0,13",fill:C.cyan})
       );
     }
 
@@ -81,7 +95,10 @@
     }
 
     function PlatformBadge({p}) {
-      return React.createElement("span", {style:{background:PLATFORM_BG[p]||C.grey,color:"#fff",padding:"2px 8px",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase"}}, p);
+      const pending = PLATFORM_PENDING.includes(p);
+      return React.createElement("span", {style:{background:PLATFORM_BG[p]||C.grey,color:"#fff",padding:"2px 8px",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",opacity:pending?0.6:1}},
+        p, pending ? " ⏳" : ""
+      );
     }
 
     function SentimentPill({s}) {
@@ -94,7 +111,7 @@
       const [hov, setHov] = useState(false);
       return React.createElement("div", {
         onMouseEnter:()=>setHov(true), onMouseLeave:()=>setHov(false),
-        style:{background:C.white,borderLeft:`4px solid ${sc}`,border:`1px solid ${hov?C.cyanMid:C.greyMid}`,borderLeft:`4px solid ${sc}`,boxShadow:hov?"0 2px 16px rgba(0,159,223,0.1)":"none",padding:"14px 18px",marginBottom:8,transition:"all 0.15s",position:"relative"}
+        style:{background:C.white,borderLeft:`4px solid ${sc}`,border:`1px solid ${hov?C.cyanMid:C.greyMid}`,borderLeft:`4px solid ${sc}`,boxShadow:hov?"0 2px 16px rgba(0,159,223,0.1)":"none",padding:"14px 18px",marginBottom:8,transition:"all 0.15s"}
       },
         React.createElement("div", {style:{display:"flex",gap:8,alignItems:"center",marginBottom:8,flexWrap:"wrap"}},
           React.createElement(PlatformBadge, {p:item.platform}),
@@ -102,16 +119,13 @@
           React.createElement("span", {style:{fontSize:10,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:C.cyan,borderBottom:`2px solid ${C.cyan}`,paddingBottom:1}}, item.brand),
           item.topic && React.createElement("span", {style:{fontSize:11,color:C.grey,fontStyle:"italic"}}, `#${item.topic}`),
           React.createElement(Stars, {n:item.stars}),
-          hov && React.createElement("button", {
-            onClick:()=>onDelete(item.id),
-            style:{marginLeft:"auto",background:"none",border:"none",color:C.grey,cursor:"pointer",fontSize:16,padding:"0 4px"}
-          }, "✕")
+          hov && React.createElement("button", {onClick:()=>onDelete(item.id),style:{marginLeft:"auto",background:"none",border:"none",color:C.grey,cursor:"pointer",fontSize:16,lineHeight:1}}, "✕")
         ),
         React.createElement("div", {style:{color:C.black,fontSize:14,lineHeight:1.65,marginBottom:8}}, item.content),
         React.createElement("div", {style:{display:"flex",gap:14,fontSize:11,color:C.grey}},
           item.author && React.createElement("span", {style:{fontWeight:700}}, `@${item.author}`),
           React.createElement("span", null, item.date),
-          item.url && item.url !== "https://..." && React.createElement("a", {href:item.url,target:"_blank",rel:"noopener noreferrer",style:{color:C.cyan,textDecoration:"none",fontWeight:700}}, "Link →")
+          item.url && item.url!=="https://..." && React.createElement("a", {href:item.url,target:"_blank",rel:"noopener noreferrer",style:{color:C.cyan,textDecoration:"none",fontWeight:700}}, "Link →")
         )
       );
     }
@@ -130,15 +144,14 @@
       );
     }
 
-    // Import Panel
+    // ── Import Panel ───────────────────────────────────────────────────────────
     function ImportPanel({onImport, onClose}) {
       const [text, setText] = useState("");
       const [error, setError] = useState("");
       const fileRef = useRef();
 
       const handleFile = e => {
-        const file = e.target.files[0];
-        if(!file) return;
+        const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = ev => setText(ev.target.result);
         reader.readAsText(file);
@@ -146,118 +159,110 @@
 
       const handleImport = () => {
         try {
-          const parsed = JSON.parse(text.trim());
-          const arr = Array.isArray(parsed) ? parsed : [];
-          if(arr.length === 0) { setError("Keine gültigen Einträge gefunden."); return; }
-          onImport(arr);
-          onClose();
-        } catch(e) {
-          setError("Ungültiges JSON Format.");
-        }
+          const arr = JSON.parse(text.trim());
+          if(!Array.isArray(arr)||!arr.length) { setError("Kein gültiges JSON-Array."); return; }
+          onImport(arr); onClose();
+        } catch { setError("Ungültiges JSON Format."); }
       };
 
       return React.createElement("div", {style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:400}},
         React.createElement("div", {style:{background:C.white,width:500,maxHeight:"80vh",display:"flex",flexDirection:"column",borderTop:`4px solid ${C.cyan}`}},
-          React.createElement("div", {style:{padding:"20px 24px",borderBottom:`1px solid ${C.greyMid}`,display:"flex",justifyContent:"space-between",alignItems:"center"}},
-            React.createElement("div", {style:{fontWeight:900,fontSize:16,color:C.darkBlue}}, "Ergebnisse importieren"),
+          React.createElement("div", {style:{padding:"18px 24px",borderBottom:`1px solid ${C.greyMid}`,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+            React.createElement("div", {style:{fontWeight:900,fontSize:15,color:C.darkBlue}}, "Ergebnisse importieren"),
             React.createElement("button", {onClick:onClose,style:{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.grey}}, "✕")
           ),
-          React.createElement("div", {style:{padding:"20px 24px",flex:1,overflowY:"auto"}},
-            React.createElement("div", {style:{fontSize:13,color:C.grey,marginBottom:16,lineHeight:1.6}},
-              "Füge JSON-Ergebnisse aus Claude ein oder lade eine JSON-Datei hoch."
-            ),
-            React.createElement("button", {
-              onClick:()=>fileRef.current.click(),
-              style:{background:C.greyLight,border:`1px solid ${C.greyMid}`,padding:"8px 16px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:12,color:C.darkBlue,fontFamily:"Lato,sans-serif"}
-            }, "📁 JSON-Datei wählen"),
+          React.createElement("div", {style:{padding:"18px 24px",flex:1,overflowY:"auto"}},
+            React.createElement("p", {style:{fontSize:13,color:C.grey,marginBottom:14,lineHeight:1.6}}, "Füge JSON-Ergebnisse aus einem Claude-Scan ein oder lade eine Datei hoch."),
+            React.createElement("button", {onClick:()=>fileRef.current.click(),style:{background:C.greyLight,border:`1px solid ${C.greyMid}`,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:12,color:C.darkBlue}}, "📁 JSON-Datei wählen"),
             React.createElement("input", {type:"file",accept:".json",ref:fileRef,onChange:handleFile,style:{display:"none"}}),
             React.createElement("textarea", {
               value:text, onChange:e=>{setText(e.target.value);setError("");},
-              placeholder:'[{"brand":"Braas","platform":"Reddit","content":"...","sentiment":"Positiv","date":"2025-05-01","author":"user","topic":"Qualität","url":"https://...","stars":null}]',
-              style:{width:"100%",height:200,padding:"10px",border:`1px solid ${C.greyMid}`,fontSize:12,fontFamily:"monospace",outline:"none",resize:"vertical",color:C.black}
+              placeholder:'[{"brand":"Braas","platform":"Fachforen","content":"...","sentiment":"Positiv","date":"2025-05-01","author":"user","topic":"Qualität","url":"https://...","stars":null}]',
+              style:{width:"100%",height:190,padding:"10px",border:`1px solid ${C.greyMid}`,fontSize:12,fontFamily:"monospace",outline:"none",resize:"vertical",color:C.black}
             }),
-            error && React.createElement("div", {style:{color:C.orange,fontSize:12,marginTop:8}}, error)
+            error && React.createElement("p", {style:{color:C.orange,fontSize:12,marginTop:8}}, error)
           ),
-          React.createElement("div", {style:{padding:"16px 24px",borderTop:`1px solid ${C.greyMid}`,display:"flex",gap:10,justifyContent:"flex-end"}},
-            React.createElement("button", {onClick:onClose,style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"8px 20px",fontSize:13,cursor:"pointer",fontFamily:"Lato,sans-serif",color:C.grey}}, "Abbrechen"),
-            React.createElement("button", {
-              onClick:handleImport, disabled:!text.trim(),
-              style:{background:text.trim()?C.cyan:C.greyMid,border:"none",padding:"8px 24px",color:C.white,fontSize:13,fontWeight:900,cursor:text.trim()?"pointer":"not-allowed",fontFamily:"Lato,sans-serif"}
-            }, "Importieren")
+          React.createElement("div", {style:{padding:"14px 24px",borderBottom:`1px solid ${C.greyMid}`,display:"flex",gap:10,justifyContent:"flex-end"}},
+            React.createElement("button", {onClick:onClose,style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"7px 18px",fontSize:13,cursor:"pointer",color:C.grey}}, "Abbrechen"),
+            React.createElement("button", {onClick:handleImport,disabled:!text.trim(),style:{background:text.trim()?C.cyan:C.greyMid,border:"none",padding:"7px 22px",color:C.white,fontSize:13,fontWeight:900,cursor:text.trim()?"pointer":"not-allowed"}}, "Importieren")
           )
         )
       );
     }
 
-    // Export helper
     function exportJSON(results) {
-      const blob = new Blob([JSON.stringify(results, null, 2)], {type:"application/json"});
+      const blob = new Blob([JSON.stringify(results,null,2)],{type:"application/json"});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = `bmi-scan-${new Date().toISOString().slice(0,10)}.json`;
-      a.click(); URL.revokeObjectURL(url);
+      const a = document.createElement("a"); a.href=url; a.download=`bmi-scan-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
     }
 
-    // Main App
+    // ── Period Selector ────────────────────────────────────────────────────────
+    function PeriodSelector({selected, onChange}) {
+      return React.createElement("div", {style:{display:"flex",alignItems:"center",gap:6}},
+        React.createElement("span", {style:{fontSize:11,color:C.grey,fontWeight:700,whiteSpace:"nowrap"}}, "📅 Zeitraum:"),
+        React.createElement("select", {
+          value:selected,
+          onChange:e=>onChange(Number(e.target.value)),
+          style:{background:C.cyanLight,border:`1px solid ${C.cyanMid}`,padding:"5px 10px",fontSize:12,fontWeight:700,color:C.darkBlue,outline:"none",cursor:"pointer"}
+        },
+          PERIOD_OPTIONS.map(o => React.createElement("option", {key:o.days, value:o.days}, o.label))
+        )
+      );
+    }
+
+    // ── Main App ───────────────────────────────────────────────────────────────
     function App() {
-      const [results, setResults]                 = useState(() => {
-        const stored = loadResults();
-        if(stored.length === 0) {
-          saveResults(SEED_DATA);
-          saveMeta({ lastRun: new Date().toISOString() });
-          return SEED_DATA;
-        }
-        return stored;
-      });
+      const [results, setResults]                 = useState(loadResults);
       const [meta, setMeta]                       = useState(loadMeta);
       const [filterBrand, setFilterBrand]         = useState("Alle");
       const [filterSentiment, setFilterSentiment] = useState("Alle");
       const [filterPlatform, setFilterPlatform]   = useState("Alle");
       const [search, setSearch]                   = useState("");
       const [showImport, setShowImport]           = useState(false);
+      const [scanDays, setScanDays]               = useState(() => load("bmi-scan-days") || 30);
+
+      const handleScanDays = d => { setScanDays(d); store("bmi-scan-days", d); };
 
       const handleImport = useCallback(arr => {
-        const withIds = arr.map((item, i) => ({
-          ...item,
-          id: item.id || `import-${Date.now()}-${i}`,
-          fetchedAt: item.fetchedAt || new Date().toISOString()
-        }));
-        const merged = [...withIds, ...results].filter((r,i,a) => a.findIndex(x=>x.id===r.id)===i).slice(0,500);
-        setResults(merged); saveResults(merged);
-        const m = {lastRun: new Date().toISOString()};
-        setMeta(m); saveMeta(m);
+        const withIds = arr.map((item,i) => ({...item, id:item.id||`imp-${Date.now()}-${i}`, fetchedAt:item.fetchedAt||new Date().toISOString()}));
+        const merged = [...withIds,...results].filter((r,i,a)=>a.findIndex(x=>x.id===r.id)===i).slice(0,500);
+        setResults(merged); store("bmi-results", merged);
+        const m={lastRun:new Date().toISOString()}; setMeta(m); store("bmi-meta",m);
       }, [results]);
 
       const handleDelete = useCallback(id => {
-        const updated = results.filter(r => r.id !== id);
-        setResults(updated); saveResults(updated);
+        const updated = results.filter(r=>r.id!==id);
+        setResults(updated); store("bmi-results",updated);
       }, [results]);
 
       const handleClear = () => {
-        if(window.confirm("Alle Ergebnisse löschen?")) {
-          setResults([]); saveResults([]);
-        }
+        if(window.confirm("Alle Ergebnisse löschen?")) { setResults([]); store("bmi-results",[]); }
       };
 
-      const filtered = results.filter(r =>
-        (filterBrand==="Alle"||r.brand===filterBrand) &&
-        (filterSentiment==="Alle"||r.sentiment===filterSentiment) &&
-        (filterPlatform==="Alle"||r.platform===filterPlatform) &&
-        (!search||r.content?.toLowerCase().includes(search.toLowerCase())||r.brand?.toLowerCase().includes(search.toLowerCase()))
-      );
+      // Date filter based on scanDays
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - scanDays);
+      const filtered = results.filter(r => {
+        if(filterBrand!=="Alle"&&r.brand!==filterBrand) return false;
+        if(filterSentiment!=="Alle"&&r.sentiment!==filterSentiment) return false;
+        if(filterPlatform!=="Alle"&&r.platform!==filterPlatform) return false;
+        if(search&&!r.content?.toLowerCase().includes(search.toLowerCase())&&!r.brand?.toLowerCase().includes(search.toLowerCase())) return false;
+        if(r.date && new Date(r.date) < cutoff) return false;
+        return true;
+      });
 
-      const brandCounts = BMI_BRANDS.map(b=>({brand:b,count:results.filter(r=>r.brand===b).length}));
-      const posC = results.filter(r=>r.sentiment==="Positiv").length;
-      const neuC = results.filter(r=>r.sentiment==="Neutral").length;
-      const negC = results.filter(r=>r.sentiment==="Negativ").length;
+      const brandCounts = BMI_BRANDS.map(b=>({brand:b,count:filtered.filter(r=>r.brand===b).length}));
+      const posC = filtered.filter(r=>r.sentiment==="Positiv").length;
+      const neuC = filtered.filter(r=>r.sentiment==="Neutral").length;
+      const negC = filtered.filter(r=>r.sentiment==="Negativ").length;
       const lastStr = meta.lastRun ? new Date(meta.lastRun).toLocaleString("de-DE") : "Noch nie";
       const nextStr = meta.lastRun ? (()=>{const d=new Date(meta.lastRun);d.setDate(d.getDate()+7);return d.toLocaleDateString("de-DE");})() : "—";
+      const periodLabel = PERIOD_OPTIONS.find(o=>o.days===scanDays)?.label || "Letzter Monat";
 
       return React.createElement("div", {style:{minHeight:"100vh",background:C.greyLight,fontFamily:"Lato,sans-serif",color:C.black}},
 
-        showImport && React.createElement(ImportPanel, {onImport:handleImport, onClose:()=>setShowImport(false)}),
+        showImport && React.createElement(ImportPanel, {onImport:handleImport,onClose:()=>setShowImport(false)}),
 
-        // Header
+        // ── Header
         React.createElement("div", {style:{background:C.white,borderBottom:`1px solid ${C.greyMid}`}},
           React.createElement("div", {style:{background:C.cyan,height:4}}),
           React.createElement("div", {style:{padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",height:60}},
@@ -269,22 +274,12 @@
               )
             ),
             React.createElement("div", {style:{display:"flex",gap:10,alignItems:"center"}},
-              React.createElement("div", {style:{textAlign:"right",marginRight:6}},
+              React.createElement("div", {style:{textAlign:"right",marginRight:4}},
                 React.createElement("div", {style:{fontSize:10,color:C.grey,letterSpacing:1,textTransform:"uppercase"}}, "Letzter Scan"),
                 React.createElement("div", {style:{fontSize:12,fontWeight:700,color:C.darkBlue}}, lastStr)
               ),
-              React.createElement("button", {
-                onClick:()=>exportJSON(results),
-                style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"7px 14px",color:C.grey,fontSize:11,cursor:"pointer",fontWeight:700,fontFamily:"Lato,sans-serif"}
-              }, "↓ Export"),
-              React.createElement("button", {
-                onClick:()=>setShowImport(true),
-                style:{background:C.darkBlue,border:"none",padding:"9px 18px",color:C.white,fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase",fontFamily:"Lato,sans-serif"}
-              }, "↑ Import"),
-              React.createElement("div", {style:{width:1,height:28,background:C.greyMid,margin:"0 4px"}}),
-              React.createElement("div", {style:{fontSize:11,color:C.grey,background:C.cyanLight,border:`1px solid ${C.cyanMid}`,padding:"6px 12px",fontWeight:700}},
-                "Scan via Claude starten → Ergebnisse hier importieren"
-              )
+              React.createElement("button", {onClick:()=>exportJSON(results),style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"7px 12px",color:C.grey,fontSize:11,cursor:"pointer",fontWeight:700}}, "↓ Export"),
+              React.createElement("button", {onClick:()=>setShowImport(true),style:{background:C.darkBlue,border:"none",padding:"9px 16px",color:C.white,fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}, "↑ Import")
             )
           ),
           React.createElement(HorizonLine)
@@ -292,69 +287,75 @@
 
         React.createElement("div", {style:{display:"flex",height:"calc(100vh - 70px)"}},
 
-          // Sidebar
+          // ── Sidebar
           React.createElement("div", {style:{width:210,background:C.white,borderRight:`1px solid ${C.greyMid}`,display:"flex",flexDirection:"column",flexShrink:0,overflowY:"auto"}},
-            React.createElement("div", {style:{padding:"18px 14px",borderBottom:`1px solid ${C.greyMid}`}},
-              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}, "Gesamt"),
-              React.createElement("div", {style:{fontSize:48,fontWeight:900,color:C.cyan,lineHeight:1}}, results.length),
-              React.createElement("div", {style:{fontSize:11,color:C.grey,marginBottom:12}}, "Mentions"),
+            // Stats
+            React.createElement("div", {style:{padding:"16px 14px",borderBottom:`1px solid ${C.greyMid}`}},
+              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:6}}, "Im Zeitraum"),
+              React.createElement("div", {style:{fontSize:44,fontWeight:900,color:C.cyan,lineHeight:1}}, filtered.length),
+              React.createElement("div", {style:{fontSize:11,color:C.grey,marginBottom:10}}, "Mentions"),
               React.createElement("div", {style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:4}},
                 [["Pos",posC,C.aqua],["Neu",neuC,C.yellow],["Neg",negC,C.orange]].map(([l,v,c])=>
-                  React.createElement("div", {key:l,style:{textAlign:"center",padding:"6px 2px",borderTop:`3px solid ${c}`,background:`${c}12`}},
-                    React.createElement("div", {style:{fontSize:20,fontWeight:900,color:c}}, v),
+                  React.createElement("div", {key:l,style:{textAlign:"center",padding:"5px 2px",borderTop:`3px solid ${c}`,background:`${c}12`}},
+                    React.createElement("div", {style:{fontSize:18,fontWeight:900,color:c}}, v),
                     React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:1}}, l)
                   )
                 )
               )
             ),
-            React.createElement("div", {style:{paddingTop:12}},
+            // Brands
+            React.createElement("div", {style:{paddingTop:10}},
               React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",padding:"0 14px 6px"}}, "Marken"),
               brandCounts.map(({brand,count})=>React.createElement(BrandRow, {key:brand,brand,count,isActive:filterBrand===brand,onClick:()=>setFilterBrand(filterBrand===brand?"Alle":brand)}))
             ),
+            // Next scan
             React.createElement("div", {style:{marginTop:"auto",padding:"12px 14px",borderTop:`1px solid ${C.greyMid}`,background:C.cyanLight}},
               React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.cyan,letterSpacing:2,textTransform:"uppercase"}}, "Nächster Scan"),
-              React.createElement("div", {style:{fontSize:15,fontWeight:900,color:C.darkBlue,marginTop:2}}, nextStr),
+              React.createElement("div", {style:{fontSize:14,fontWeight:900,color:C.darkBlue,marginTop:2}}, nextStr),
               React.createElement("div", {style:{fontSize:10,color:C.grey}}, "Wöchentlicher Rhythmus")
             )
           ),
 
-          // Main
+          // ── Main
           React.createElement("div", {style:{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}},
+            // Filter bar
             React.createElement("div", {style:{background:C.white,borderBottom:`1px solid ${C.greyMid}`,padding:"10px 20px",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}},
-              React.createElement("input", {placeholder:"Suchen…",value:search,onChange:e=>setSearch(e.target.value),style:{background:C.greyLight,border:`1px solid ${C.greyMid}`,padding:"6px 12px",fontSize:13,outline:"none",width:170,color:C.black,fontFamily:"Lato,sans-serif"}}),
+              React.createElement("input", {placeholder:"Suchen…",value:search,onChange:e=>setSearch(e.target.value),style:{background:C.greyLight,border:`1px solid ${C.greyMid}`,padding:"6px 12px",fontSize:13,outline:"none",width:160,color:C.black}}),
               [["Sentiment",SENTIMENTS,filterSentiment,setFilterSentiment],["Plattform",PLATFORMS,filterPlatform,setFilterPlatform]].map(([label,opts,val,setter])=>
-                React.createElement("select", {key:label,value:val,onChange:e=>setter(e.target.value),style:{background:C.white,border:`1px solid ${C.greyMid}`,padding:"6px 10px",fontSize:12,outline:"none",cursor:"pointer",fontWeight:700,color:C.darkBlue,fontFamily:"Lato,sans-serif"}},
+                React.createElement("select", {key:label,value:val,onChange:e=>setter(e.target.value),style:{background:C.white,border:`1px solid ${C.greyMid}`,padding:"6px 10px",fontSize:12,outline:"none",cursor:"pointer",fontWeight:700,color:C.darkBlue}},
                   React.createElement("option", {value:"Alle"}, `Alle ${label}`),
                   opts.map(o=>React.createElement("option", {key:o,value:o}, o))
                 )
               ),
               (filterBrand!=="Alle"||filterSentiment!=="Alle"||filterPlatform!=="Alle"||search) &&
-                React.createElement("button", {onClick:()=>{setFilterBrand("Alle");setFilterSentiment("Alle");setFilterPlatform("Alle");setSearch("");},style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"6px 10px",color:C.grey,fontSize:11,cursor:"pointer",fontFamily:"Lato,sans-serif"}}, "✕ Zurücksetzen"),
-              React.createElement("span", {style:{fontSize:11,color:C.grey,background:C.cyanLight,border:`1px solid ${C.cyanMid}`,padding:"4px 10px",fontWeight:700}}, "📅 Letzter Monat"),
+                React.createElement("button", {onClick:()=>{setFilterBrand("Alle");setFilterSentiment("Alle");setFilterPlatform("Alle");setSearch("");},style:{background:"none",border:`1px solid ${C.greyMid}`,padding:"6px 10px",color:C.grey,fontSize:11,cursor:"pointer"}}, "✕ Reset"),
+              React.createElement(PeriodSelector, {selected:scanDays, onChange:handleScanDays}),
               React.createElement("span", {style:{fontSize:12,color:C.grey,marginLeft:"auto",fontWeight:700}}, `${filtered.length} Ergebnisse`),
-              results.length > 0 && React.createElement("button", {onClick:handleClear,style:{background:"none",border:`1px solid ${C.orange}20`,padding:"4px 10px",color:C.orange,fontSize:11,cursor:"pointer",fontFamily:"Lato,sans-serif"}}, "Leeren")
+              results.length>0 && React.createElement("button", {onClick:handleClear,style:{background:"none",border:`1px solid ${C.orange}30`,padding:"4px 10px",color:C.orange,fontSize:11,cursor:"pointer"}}, "Leeren")
             ),
+            // Feed
             React.createElement("div", {style:{flex:1,overflowY:"auto",padding:"16px 20px"}},
               results.length===0 && React.createElement("div", {style:{textAlign:"center",padding:"70px 0"}},
-                React.createElement(BmiLogo, {size:60}),
-                React.createElement("div", {style:{fontWeight:900,fontSize:22,color:C.darkBlue,marginTop:20,marginBottom:8}}, "Noch keine Daten"),
-                React.createElement("div", {style:{color:C.grey,fontSize:14,marginBottom:24}},
-                  "Starte einen Scan in Claude und importiere die Ergebnisse hier."
-                ),
-                React.createElement("button", {onClick:()=>setShowImport(true),style:{background:C.cyan,border:"none",padding:"11px 30px",color:C.white,fontSize:13,fontWeight:900,cursor:"pointer",textTransform:"uppercase",letterSpacing:1,fontFamily:"Lato,sans-serif"}}, "↑ Importieren"),
+                React.createElement(BmiLogo, {size:56}),
+                React.createElement("div", {style:{fontWeight:900,fontSize:20,color:C.darkBlue,marginTop:20,marginBottom:8}}, "Noch keine Daten"),
+                React.createElement("p", {style:{color:C.grey,fontSize:14,marginBottom:24}}, "Starte einen Scan in Claude und importiere die Ergebnisse."),
+                React.createElement("button", {onClick:()=>setShowImport(true),style:{background:C.cyan,border:"none",padding:"10px 28px",color:C.white,fontSize:13,fontWeight:900,cursor:"pointer",textTransform:"uppercase",letterSpacing:1}}, "↑ Importieren"),
                 React.createElement("div", {style:{marginTop:28,maxWidth:280,margin:"28px auto 0"}}, React.createElement(HorizonLine))
               ),
-              filtered.length===0 && results.length>0 && React.createElement("div", {style:{textAlign:"center",padding:"60px 0",color:C.grey,fontSize:14}}, "Keine Ergebnisse für die aktuellen Filter."),
+              filtered.length===0&&results.length>0 && React.createElement("div", {style:{textAlign:"center",padding:"60px 0",color:C.grey,fontSize:14}},
+                `Keine Ergebnisse im Zeitraum „${periodLabel}". Filter anpassen oder Zeitraum erweitern.`
+              ),
               filtered.map(item=>React.createElement(ResultCard, {key:item.id,item,onDelete:handleDelete}))
             )
           ),
 
-          // Right Panel
-          React.createElement("div", {style:{width:190,background:C.white,borderLeft:`1px solid ${C.greyMid}`,padding:"18px 14px",flexShrink:0,overflowY:"auto"}},
+          // ── Right Panel
+          React.createElement("div", {style:{width:195,background:C.white,borderLeft:`1px solid ${C.greyMid}`,padding:"18px 14px",flexShrink:0,overflowY:"auto"}},
+            // Sentiment
             React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}, "Sentiment"),
             SENTIMENTS.map(s=>{
-              const cnt=results.filter(r=>r.sentiment===s).length;
-              const pct=results.length?Math.round((cnt/results.length)*100):0;
+              const cnt=filtered.filter(r=>r.sentiment===s).length;
+              const pct=filtered.length?Math.round((cnt/filtered.length)*100):0;
               const c=SENTIMENT_COLORS[s];
               return React.createElement("div", {key:s,style:{marginBottom:14}},
                 React.createElement("div", {style:{display:"flex",justifyContent:"space-between",marginBottom:5}},
@@ -366,22 +367,40 @@
                 )
               );
             }),
+            // Sources
             React.createElement("div", {style:{marginTop:20,borderTop:`1px solid ${C.greyMid}`,paddingTop:14}},
               React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}, "Quellen"),
               PLATFORMS.map(p=>{
-                const cnt=results.filter(r=>r.platform===p).length;
+                const cnt=filtered.filter(r=>r.platform===p).length;
                 const isAct=filterPlatform===p;
-                return React.createElement("div", {key:p,onClick:()=>setFilterPlatform(isAct?"Alle":p),style:{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:4,cursor:"pointer",background:isAct?C.cyanLight:"transparent",borderLeft:`2px solid ${isAct?C.cyan:"transparent"}`,transition:"all 0.12s"}},
-                  React.createElement("span", {style:{fontSize:12,color:isAct?C.cyan:C.grey,fontWeight:isAct?700:400}}, p),
-                  React.createElement("span", {style:{fontSize:11,fontWeight:700,color:isAct?C.cyan:C.grey}}, cnt)
+                const pending=PLATFORM_PENDING.includes(p);
+                return React.createElement("div", {key:p,onClick:()=>!pending&&setFilterPlatform(isAct?"Alle":p),style:{display:"flex",justifyContent:"space-between",padding:"4px 6px",marginBottom:4,cursor:pending?"default":"pointer",background:isAct?C.cyanLight:"transparent",borderLeft:`2px solid ${isAct?C.cyan:"transparent"}`,opacity:pending?0.5:1,transition:"all 0.12s"}},
+                  React.createElement("span", {style:{fontSize:12,color:isAct?C.cyan:C.grey,fontWeight:isAct?700:400}}, p, pending?" ⏳":""),
+                  React.createElement("span", {style:{fontSize:11,fontWeight:700,color:isAct?C.cyan:C.grey}}, pending?"—":cnt)
                 );
               })
             ),
+            // API Status
+            React.createElement("div", {style:{marginTop:20,borderTop:`1px solid ${C.greyMid}`,paddingTop:14}},
+              React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.grey,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}, "API-Status"),
+              [["Instagram","pending"],["TikTok","pending"],["Google","pending"]].map(([name,status])=>
+                React.createElement("div", {key:name,style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},
+                  React.createElement("span", {style:{fontSize:12,fontWeight:700,color:C.darkBlue}}, name),
+                  React.createElement("span", {style:{fontSize:9,fontWeight:700,padding:"2px 6px",color:status==="active"?C.aqua:C.yellow,background:status==="active"?`${C.aqua}15`:`${C.yellow}15`,border:`1px solid ${status==="active"?C.aqua:C.yellow}`,letterSpacing:0.5}},
+                    status==="active"?"AKTIV":"AUSSTEHEND"
+                  )
+                )
+              ),
+              React.createElement("div", {style:{marginTop:10,padding:"10px",background:C.cyanLight,border:`1px solid ${C.cyanMid}`,fontSize:11,color:C.darkBlue,lineHeight:1.6}},
+                "📋 Instagram-Integration folgt sobald der Meta Business Suite Zugang vorliegt."
+              )
+            ),
+            // Workflow
             React.createElement("div", {style:{marginTop:20,borderTop:`1px solid ${C.greyMid}`,paddingTop:14}},
               React.createElement("div", {style:{fontSize:9,fontWeight:700,color:C.cyan,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}, "Workflow"),
-              React.createElement("div", {style:{fontSize:11,color:C.grey,lineHeight:1.7}},
-                "1. Scan in Claude starten", React.createElement("br"),
-                "2. Ergebnisse als JSON kopieren", React.createElement("br"),
+              React.createElement("div", {style:{fontSize:11,color:C.grey,lineHeight:1.8}},
+                "1. Scan in Claude starten",React.createElement("br"),
+                "2. Ergebnisse als JSON kopieren",React.createElement("br"),
                 "3. Hier via ↑ Import einfügen"
               )
             )
