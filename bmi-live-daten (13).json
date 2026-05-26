@@ -1,0 +1,50 @@
+[
+  {
+    "id": "yt-UgzXqZfOi366ok-A5Ix4AaABAg",
+    "brand": "Braas",
+    "platform": "YouTube",
+    "author": "@rossdunhill9329",
+    "content": "Braas in Bulgaria.",
+    "sentiment": "Neutral",
+    "url": "https://www.youtube.com/watch?v=AjttQfEkugM&lc=UgzXqZfOi366ok-A5Ix4AaABAg",
+    "date": "2020-05-26",
+    "topic": "Video: Welcher Dachtyp sind Sie?...",
+    "stars": "-"
+  },
+  {
+    "id": "yt-UgwDScWoKOCxclS0LPx4AaABAg",
+    "brand": "Braas",
+    "platform": "YouTube",
+    "author": "@kentbrabuss4707",
+    "content": "Braas systems.",
+    "sentiment": "Neutral",
+    "url": "https://www.youtube.com/watch?v=AjttQfEkugM&lc=UgwDScWoKOCxclS0LPx4AaABAg",
+    "date": "2020-04-23",
+    "topic": "Video: Welcher Dachtyp sind Sie?...",
+    "stars": "-"
+  },
+  {
+    "id": "yt-UgzIOr_T2ryIT-MT5g94AaABAg",
+    "brand": "Braas",
+    "platform": "YouTube",
+    "author": "@ryanfendt4643",
+    "content": "Braas alles gut bedacht.",
+    "sentiment": "Positiv",
+    "url": "https://www.youtube.com/watch?v=AjttQfEkugM&lc=UgzIOr_T2ryIT-MT5g94AaABAg",
+    "date": "2019-12-23",
+    "topic": "Video: Welcher Dachtyp sind Sie?...",
+    "stars": "-"
+  },
+  {
+    "id": "yt-Ugy16TyF6x5Urivr2gZ4AaABAg",
+    "brand": "Braas",
+    "platform": "YouTube",
+    "author": "@malinmonev9331",
+    "content": "Braas-beton forever.",
+    "sentiment": "Neutral",
+    "url": "https://www.youtube.com/watch?v=AjttQfEkugM&lc=Ugy16TyF6x5Urivr2gZ4AaABAg",
+    "date": "2019-12-01",
+    "topic": "Video: Welcher Dachtyp sind Sie?...",
+    "stars": "-"
+  }
+]
